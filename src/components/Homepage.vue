@@ -12,12 +12,12 @@
           <span class="logo-text">Think.Play.Act</span>
         </div>
         <nav class="nav-menu">
-          <router-link to="/game-world" class="nav-link"
-            >Game World</router-link
-          >
-          <router-link to="/how-they-play" class="nav-link"
-            >How They Play</router-link
-          >
+          <router-link to="/game-dash" class="nav-link">
+            Game World
+          </router-link>
+          <router-link to="/mood-observation" class="nav-link">
+            How They Play
+          </router-link>
         </nav>
       </div>
     </header>
@@ -71,6 +71,16 @@
         </div>
       </div>
     </section>
+
+    <!-- Game Dashboard CTA -->
+    <section class="game-dashboard-cta bg-indigo-50 p-8 text-center">
+      <button
+        class="px-6 py-3 bg-indigo-600 text-white rounded-full text-lg font-semibold hover:bg-indigo-700 transition-colors"
+        @click="$router.push('/game-dash')"
+      >
+        Go to Game Dashboard
+      </button>
+    </section>
   </div>
 </template>
 
@@ -112,7 +122,7 @@ export default {
 /* Navbar */
 .navbar {
   background-color: #fff;
-  padding: 1.5rem 3rem; /* Increased padding */
+  padding: 1.5rem 3rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .navbar-container {
@@ -125,12 +135,12 @@ export default {
   align-items: center;
 }
 .logo-icon {
-  width: 70px; /* Bigger logo */
+  width: 70px;
   height: auto;
   margin-right: 1rem;
 }
 .logo-text {
-  font-size: 2rem; /* Bigger title */
+  font-size: 2rem;
   font-weight: 800;
   color: #333;
 }
@@ -141,8 +151,8 @@ export default {
 .nav-link {
   color: #333;
   text-decoration: none;
-  font-weight: 600; /* Bolder links */
-  font-size: 1.2rem; /* Bigger font */
+  font-weight: 600;
+  font-size: 1.2rem;
 }
 .nav-link:hover {
   color: #3498db;
@@ -158,7 +168,7 @@ export default {
 .hero-background {
   width: 100%;
   height: 100%;
-  background: url("@/assets/hero-controller.jpg") center center/cover no-repeat;
+  background: url("@/assets/hero-controller.jpg") center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -209,7 +219,6 @@ export default {
   max-width: 1440px;
   gap: 3rem;
 }
-
 .tracker-content {
   flex: 1;
   text-align: left;
@@ -246,17 +255,17 @@ export default {
   position: relative;
 }
 .carousel-images {
+  position: relative;
   width: 100%;
   height: 100%;
-  position: relative;
 }
 .carousel-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0;
   transition: opacity 1s ease-in-out;
   border-radius: 16px;
