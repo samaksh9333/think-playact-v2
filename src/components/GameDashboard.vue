@@ -1,18 +1,24 @@
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50 text-gray-800 font-sans">
     <!-- Navbar -->
-    <nav class="bg-indigo-600 text-white p-4 flex justify-between items-center">
-      <div class="text-2xl font-bold">ThinkPlay Act</div>
+    <nav
+      class="bg-indigo-600 text-white p-4 flex justify-between items-center fixed w-full z-10"
+    >
+      <div class="text-2xl font-bold flex items-center space-x-2">
+        <img src="@/assets/icon.png" alt="ThinkPlayAct Logo" class="w-8 h-8" />
+        <span>ThinkPlay Act</span>
+      </div>
       <router-link to="/" class="hover:underline text-lg">Home</router-link>
     </nav>
 
-    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+    <!-- Push content below fixed navbar -->
+    <div class="pt-20 flex-1 flex flex-col md:flex-row overflow-hidden">
       <!-- Sidebar Filters/Search -->
       <aside
         class="w-full md:w-64 bg-white p-6 border-b md:border-b-0 md:border-r"
       >
         <h2 class="text-indigo-700 text-lg font-semibold mb-4">
-          Filters & Search
+          Filters &amp; Search
         </h2>
         <input
           v-model="searchTerm"
@@ -60,7 +66,7 @@
           >
             <h3 class="font-semibold truncate mb-2">{{ game.game_title }}</h3>
             <p class="text-sm text-gray-600">
-              {{ new Date(game.release_date).getFullYear() }} •
+              {{ new Date(game.release_date).getFullYear() }} &bull;
               {{ Number(game.owners_lower).toLocaleString() }} owners
             </p>
           </div>
@@ -99,18 +105,19 @@ export default {
         )
         .sort((a, b) => Number(b[this.sortKey]) - Number(a[this.sortKey]));
 
-      if (!term && !this.violenceFilter) {
-        return list.slice(0, this.PAGE_SIZE);
-      }
-      return list;
+      // Only top N when no search/filter
+      return !term && !this.violenceFilter
+        ? list.slice(0, this.PAGE_SIZE)
+        : list;
     },
   },
   methods: {
     async fetchGames() {
-      const base = process.env.VUE_APP_API_URL || "http://localhost:3001";
+      // in dev /api is proxied to localhost:3001
+      const base = process.env.VUE_APP_API_URL || "";
       const url = base
         ? `${base}/api/classified_steam_games`
-        : `/api/classified_steam_games`;
+        : "/api/classified_steam_games";
 
       try {
         const res = await fetch(url);
@@ -121,6 +128,7 @@ export default {
       }
     },
     selectGame(game) {
+      // your click handler...
       console.log("Selected:", game.game_title);
     },
   },
@@ -148,7 +156,14 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
+/* ensure we push content below fixed navbar */
 .min-h-screen {
   height: 100vh;
+  padding-top: 4rem;
+}
+@media (max-width: 768px) {
+  .games-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 </style>
