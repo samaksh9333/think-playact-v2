@@ -4,20 +4,34 @@ const cors = require("cors");
 const { Pool } = require("pg");
 
 const app = express();
-app.use(cors());
+
+// 1) Global CORS + Private Network support
+app.use((req, res, next) => {
+  // Allow any origin (adjust in prod)
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  // Chrome 130+ requires this for private-network subresource access
+  res.header("Access-Control-Allow-Private-Network", "true");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 app.use(express.json());
 
-// PostgreSQL connection via AZURE_DB_CONN env var
+// 2) PostgreSQL connection via AZURE_DB_CONN env var
 const pool = new Pool({
   connectionString: process.env.AZURE_DB_CONN,
   ssl: { rejectUnauthorized: false },
 });
 
-app.get("/", (req, res) => res.send("Game API running!"));
+// 3) Health-check at /api
+app.get("/api", (req, res) => {
+  res.send("🎮 Game API is up and running under /api!");
+});
 
-// GET /api/classified_steam_games
-// Optional query params:
-//    page (1-based) and perPage — if provided, returns paged results with metadata
+// 4) All classified Steam games, with optional pagination
 app.get("/api/classified_steam_games", async (req, res) => {
   const page = parseInt(req.query.page, 10);
   const perPage = parseInt(req.query.perPage, 10);
@@ -26,7 +40,7 @@ app.get("/api/classified_steam_games", async (req, res) => {
     if (page > 0 && perPage > 0) {
       // Count total rows
       const countResult = await pool.query(
-        `SELECT COUNT(*) AS total FROM classified_steam_games`
+        "SELECT COUNT(*) AS total FROM classified_steam_games"
       );
       const totalRows = parseInt(countResult.rows[0].total, 10);
 
@@ -48,7 +62,9 @@ app.get("/api/classified_steam_games", async (req, res) => {
       });
     } else {
       // No pagination: return everything
-      const result = await pool.query("SELECT * FROM classified_steam_games");
+      const result = await pool.query(
+        "SELECT * FROM classified_steam_games ORDER BY owners_lower DESC"
+      );
       return res.json(result.rows);
     }
   } catch (err) {
@@ -59,7 +75,7 @@ app.get("/api/classified_steam_games", async (req, res) => {
   }
 });
 
-// GET /api/violence_counts
+// 5) Violence counts
 app.get("/api/violence_counts", async (req, res) => {
   try {
     const { rows } = await pool.query(`
@@ -74,7 +90,7 @@ app.get("/api/violence_counts", async (req, res) => {
   }
 });
 
-// GET /api/genre_emotion_summary
+// 6) Genre emotion summary
 app.get("/api/genre_emotion_summary", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM genre_emotion_summary");
@@ -85,5 +101,8 @@ app.get("/api/genre_emotion_summary", async (req, res) => {
   }
 });
 
+// 7) Start server
 const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`API listening on port ${port}`));
+app.listen(port, () =>
+  console.log(`API listening on port ${port} (endpoints under /api)`)
+);

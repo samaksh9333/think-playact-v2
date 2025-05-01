@@ -14,14 +14,12 @@
         <h2 class="text-indigo-700 text-lg font-semibold mb-4">
           Filters & Search
         </h2>
-
         <input
           v-model="searchTerm"
           type="text"
           placeholder="Search games…"
           class="w-full mb-4 p-2 border rounded focus:ring-indigo-400"
         />
-
         <label class="block mb-1 text-sm">Violence Level</label>
         <select
           v-model="violenceFilter"
@@ -32,7 +30,6 @@
           <option value="Moderately Violent">Moderately Violent</option>
           <option value="Highly Violent">Highly Violent</option>
         </select>
-
         <label class="block mb-1 text-sm">Sort By</label>
         <select
           v-model="sortKey"
@@ -47,11 +44,7 @@
       <!-- Games Grid -->
       <main class="flex-1 p-6 overflow-auto">
         <h2 class="text-2xl font-semibold text-gray-700 mb-4">
-          {{
-            !searchTerm && !violenceFilter
-              ? "Top 10 Popular Games"
-              : "Matching Games"
-          }}
+          {{ headerText }}
         </h2>
 
         <div v-if="!filteredGames.length" class="text-center text-gray-500">
@@ -77,51 +70,63 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from "vue";
+<script>
+export default {
+  name: "GameDashboard",
+  data() {
+    return {
+      games: [],
+      searchTerm: "",
+      violenceFilter: "",
+      sortKey: "owners_lower",
+      PAGE_SIZE: 10,
+    };
+  },
+  computed: {
+    headerText() {
+      return !this.searchTerm && !this.violenceFilter
+        ? "Top 10 Popular Games"
+        : "Matching Games";
+    },
+    filteredGames() {
+      const term = this.searchTerm.trim().toLowerCase();
+      let list = this.games
+        .filter((g) =>
+          term ? g.game_title.toLowerCase().includes(term) : true
+        )
+        .filter((g) =>
+          this.violenceFilter ? g.violence_level === this.violenceFilter : true
+        )
+        .sort((a, b) => Number(b[this.sortKey]) - Number(a[this.sortKey]));
 
-const API = "http://localhost:3001";
-const games = ref([]);
-const searchTerm = ref("");
-const violenceFilter = ref("");
-const sortKey = ref("owners_lower");
-const PAGE_SIZE = 10;
+      if (!term && !this.violenceFilter) {
+        return list.slice(0, this.PAGE_SIZE);
+      }
+      return list;
+    },
+  },
+  methods: {
+    async fetchGames() {
+      const base = process.env.VUE_APP_API_URL || "";
+      const url = base
+        ? `${base}/api/classified_steam_games`
+        : `/api/classified_steam_games`;
 
-onMounted(async () => {
-  try {
-    const res = await fetch(`${API}/api/classified_steam_games`);
-    games.value = await res.json();
-  } catch (e) {
-    console.error("Failed to load games:", e);
-  }
-});
-
-const filteredGames = computed(() => {
-  const term = searchTerm.value.trim().toLowerCase();
-
-  // 1) filter full dataset by searchTerm + violenceFilter
-  let list = games.value
-    .filter((g) => (term ? g.game_title.toLowerCase().includes(term) : true))
-    .filter((g) =>
-      violenceFilter.value ? g.violence_level === violenceFilter.value : true
-    );
-
-  // 2) sort
-  list = list.sort(
-    (a, b) => Number(b[sortKey.value]) - Number(a[sortKey.value])
-  );
-
-  // 3) if no search + no filter, only show top PAGE_SIZE
-  if (!term && !violenceFilter.value) {
-    return list.slice(0, PAGE_SIZE);
-  }
-
-  // otherwise show all matching
-  return list;
-});
-
-const selectGame = (game) => {
-  console.log("Selected:", game.game_title);
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(res.statusText);
+        this.games = await res.json();
+      } catch (err) {
+        console.error("Failed to load games:", err);
+      }
+    },
+    selectGame(game) {
+      console.log("Selected:", game.game_title);
+    },
+  },
+  created() {
+    this.fetchGames();
+  },
 };
 </script>
 
