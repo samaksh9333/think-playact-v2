@@ -1,3 +1,4 @@
+// server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -5,54 +6,63 @@ const { Pool } = require("pg");
 
 const app = express();
 
-// 1) Global CORS + Private Network support
+// === CORS setup ===
+// In development you might allow everything; in production lock this down to your frontend URL.
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+
+app.use(
+  cors({
+    origin: CORS_ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    // let our custom middleware still add the private-network header
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
+
+// Add the Private-Network header for Chrome 130+ preflights
 app.use((req, res, next) => {
-  // Allow any origin (adjust in prod)
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  // Chrome 130+ requires this for private-network subresource access
-  res.header("Access-Control-Allow-Private-Network", "true");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
 });
+
 app.use(express.json());
 
-// 2) PostgreSQL connection via AZURE_DB_CONN env var
+// === PostgreSQL setup ===
 const pool = new Pool({
   connectionString: process.env.AZURE_DB_CONN,
   ssl: { rejectUnauthorized: false },
 });
 
-// 3) Health-check at /api
+// === Routes ===
+// Health check
 app.get("/api", (req, res) => {
   res.send("🎮 Game API is up and running under /api!");
 });
 
-// 4) All classified Steam games, with optional pagination
+// Fetch classified Steam games, optional ?page & ?perPage
 app.get("/api/classified_steam_games", async (req, res) => {
   const page = parseInt(req.query.page, 10);
   const perPage = parseInt(req.query.perPage, 10);
 
   try {
     if (page > 0 && perPage > 0) {
-      // Count total rows
       const countResult = await pool.query(
         "SELECT COUNT(*) AS total FROM classified_steam_games"
       );
       const totalRows = parseInt(countResult.rows[0].total, 10);
 
-      // Fetch just this page
       const offset = (page - 1) * perPage;
-      const dataSql = `
-        SELECT *
-          FROM classified_steam_games
-         ORDER BY owners_lower DESC
-         LIMIT $1 OFFSET $2
-      `;
-      const dataResult = await pool.query(dataSql, [perPage, offset]);
+      const dataResult = await pool.query(
+        `
+          SELECT *
+            FROM classified_steam_games
+           ORDER BY owners_lower DESC
+           LIMIT $1 OFFSET $2
+        `,
+        [perPage, offset]
+      );
 
       return res.json({
         page,
@@ -61,7 +71,7 @@ app.get("/api/classified_steam_games", async (req, res) => {
         data: dataResult.rows,
       });
     } else {
-      // No pagination: return everything
+      // no pagination
       const result = await pool.query(
         "SELECT * FROM classified_steam_games ORDER BY owners_lower DESC"
       );
@@ -75,7 +85,7 @@ app.get("/api/classified_steam_games", async (req, res) => {
   }
 });
 
-// 5) Violence counts
+// Violence counts
 app.get("/api/violence_counts", async (req, res) => {
   try {
     const { rows } = await pool.query(`
@@ -90,7 +100,7 @@ app.get("/api/violence_counts", async (req, res) => {
   }
 });
 
-// 6) Genre emotion summary
+// Genre emotion summary
 app.get("/api/genre_emotion_summary", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM genre_emotion_summary");
@@ -101,8 +111,8 @@ app.get("/api/genre_emotion_summary", async (req, res) => {
   }
 });
 
-// 7) Start server
+// === Start server ===
 const port = process.env.PORT || 3001;
-app.listen(port, () =>
-  console.log(`API listening on port ${port} (endpoints under /api)`)
-);
+app.listen(port, () => {
+  console.log(`API listening on port ${port} (endpoints under /api)`);
+});
