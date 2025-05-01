@@ -1,5 +1,5 @@
 <template>
-  <div class="home-page">
+  <div class="home-page fade-in">
     <!-- Navbar -->
     <header class="navbar">
       <div class="navbar-container">
@@ -12,12 +12,10 @@
           <span class="logo-text">Think.Play.Act</span>
         </div>
         <nav class="nav-menu">
-          <router-link to="/game-dash" class="nav-link">
-            Game World
-          </router-link>
-          <router-link to="/mood-observation" class="nav-link">
-            How They Play
-          </router-link>
+          <router-link to="/game-dash" class="nav-link">Game World</router-link>
+          <router-link to="/mood-observation" class="nav-link"
+            >How They Play</router-link
+          >
         </nav>
       </div>
     </header>
@@ -72,14 +70,27 @@
       </div>
     </section>
 
-    <!-- Game Dashboard CTA -->
-    <section class="game-dashboard-cta bg-indigo-50 p-8 text-center">
-      <button
-        class="px-6 py-3 bg-indigo-600 text-white rounded-full text-lg font-semibold hover:bg-indigo-700 transition-colors"
-        @click="$router.push('/game-dash')"
-      >
-        Go to Game Dashboard
-      </button>
+    <!-- Decode Game Age Labels Section -->
+    <section class="age-labels-section">
+      <div class="labels-box">
+        <img
+          src="@/assets/age-guide.jpg"
+          alt="Age Guide"
+          class="labels-image"
+        />
+        <div class="labels-content">
+          <h3>Decode Game Age Labels</h3>
+          <p>
+            Ever wondered what those game ratings like "Mature 17+" or "Everyone
+            10+" really mean? Click below to understand how age labels are
+            assigned, what content they imply, and how to choose games
+            appropriate for your child’s development.
+          </p>
+          <button @click="$router.push('/game-dash')" class="labels-button">
+            View Age Rating Guide
+          </button>
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -117,9 +128,18 @@ export default {
   font-family: "Roboto", sans-serif;
   background-color: #f5f5f5;
   min-height: 100vh;
+  animation: fadeIn 1.2s ease-in-out;
 }
 
-/* Navbar */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .navbar {
   background-color: #fff;
   padding: 1.5rem 3rem;
@@ -158,7 +178,6 @@ export default {
   color: #3498db;
 }
 
-/* Hero Section */
 .hero {
   height: 90vh;
   display: flex;
@@ -201,10 +220,9 @@ export default {
   background-color: #217dbb;
 }
 
-/* Mood Tracker Section */
 .mood-tracker-section {
   background-color: #fff;
-  padding: 4rem 2rem;
+  padding: 4rem 2rem 2rem;
   display: flex;
   justify-content: center;
 }
@@ -246,7 +264,6 @@ export default {
   background-color: #217dbb;
 }
 
-/* Carousel */
 .carousel-wrapper {
   flex: 1;
   height: 400px;
@@ -274,7 +291,56 @@ export default {
   opacity: 1;
 }
 
-/* Responsive */
+.age-labels-section {
+  padding: 0 2rem 3rem;
+  display: flex;
+  justify-content: center;
+}
+.labels-box {
+  background: #f9f9f9;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1440px;
+  gap: 2rem;
+  height: 280px;
+}
+.labels-image {
+  height: 100%;
+  width: auto;
+  border-radius: 16px;
+  object-fit: cover;
+}
+.labels-content {
+  flex: 1;
+}
+.labels-content h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.labels-content p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+.labels-button {
+  background-color: #3498db;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  color: white;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.labels-button:hover {
+  background-color: #217dbb;
+}
+
 @media (max-width: 768px) {
   .tracker-box {
     flex-direction: column;
@@ -283,6 +349,11 @@ export default {
   }
   .carousel-wrapper {
     height: 250px;
+  }
+  .labels-box {
+    flex-direction: column;
+    height: auto;
+    text-align: center;
   }
 }
 </style>
