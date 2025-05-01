@@ -105,7 +105,6 @@ export default {
         )
         .sort((a, b) => Number(b[this.sortKey]) - Number(a[this.sortKey]));
 
-      // Only top N when no search/filter
       return !term && !this.violenceFilter
         ? list.slice(0, this.PAGE_SIZE)
         : list;
@@ -113,13 +112,12 @@ export default {
   },
   methods: {
     async fetchGames() {
-      // VUE_APP_API_URL should be set to e.g.
-      // - dev: http://localhost:3001/api
-      // - prod: https://<your-azure>.azurewebsites.net/api
+      // BASE should be "http://localhost:3001" in dev
+      // and "https://your-azure-app.azurewebsites.net" in prod
       const base = process.env.VUE_APP_API_URL || "";
-      // No extra “/api” here—your env var includes it
+      // ALWAYS hit /api/classified_steam_games
       const endpoint = base
-        ? `${base}/classified_steam_games`
+        ? `${base}/api/classified_steam_games`
         : "/api/classified_steam_games";
 
       console.log("Fetching games from:", endpoint);
