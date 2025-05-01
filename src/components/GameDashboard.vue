@@ -113,22 +113,21 @@ export default {
   },
   methods: {
     async fetchGames() {
-      // in dev /api is proxied to localhost:3001
-      const base = process.env.VUE_APP_API_URL || "";
-      const url = base
+      // front-end will see VUE_APP_API_BASE_URL in production, or use '/api' in dev
+      const base = process.env.VUE_APP_API_BASE_URL || "";
+      const endpoint = base
         ? `${base}/api/classified_steam_games`
         : "/api/classified_steam_games";
 
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(res.statusText);
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         this.games = await res.json();
       } catch (err) {
         console.error("Failed to load games:", err);
       }
     },
     selectGame(game) {
-      // your click handler...
       console.log("Selected:", game.game_title);
     },
   },
