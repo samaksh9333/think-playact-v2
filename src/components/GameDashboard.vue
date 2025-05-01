@@ -113,11 +113,13 @@ export default {
   },
   methods: {
     async fetchGames() {
-      // production env-var (set on Netlify): VUE_APP_API_BASE_URL
-      // local dev: proxy /api -> localhost:3001 via vue.config.js
-      const base = process.env.VUE_APP_API_BASE_URL || "";
+      // VUE_APP_API_URL should be set to e.g.
+      // - dev: http://localhost:3001/api
+      // - prod: https://<your-azure>.azurewebsites.net/api
+      const base = process.env.VUE_APP_API_URL || "";
+      // No extra “/api” here—your env var includes it
       const endpoint = base
-        ? `${base}/api/classified_steam_games`
+        ? `${base}/classified_steam_games`
         : "/api/classified_steam_games";
 
       console.log("Fetching games from:", endpoint);
