@@ -74,7 +74,8 @@
             <p><strong>Violence:</strong> {{ game.violence_level }}</p>
             <p><strong>Genres:</strong> {{ formatGenres(game.genres) }}</p>
             <p>
-              <strong>Age Rating:</strong> {{ game.ageRating || "Loading..." }}
+              <strong>Age Rating:</strong>
+              {{ game.ageRating || "Loading..." }}
             </p>
           </div>
         </div>
@@ -123,33 +124,31 @@ export default {
   },
   methods: {
     async fetchGames() {
-      const base = process.env.VUE_APP_API_URL || "";
-      const endpoint = base
-        ? `${base}/api/classified_steam_games`
-        : "/api/classified_steam_games";
-
       try {
-        const res = await fetch(endpoint);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetch("/api/classified_steam_games");
         const data = await res.json();
         this.games = data.slice(0, 12);
         for (const game of this.games) {
-          this.fetchAgeRating(game);
+          this.fetchAgeRatingFromRawg(game);
         }
       } catch (err) {
         console.error("Failed to load games:", err);
       }
     },
-    async fetchAgeRating(game) {
-      const base = process.env.VUE_APP_API_URL || "";
+    async fetchAgeRatingFromRawg(game) {
       try {
         const res = await fetch(
-          `${base}/api/rawg-age-rating?title=${encodeURIComponent(
+          `https://api.rawg.io/api/games?key=a8bb5f82b68d45adb19a0d48fc80fc92&search=${encodeURIComponent(
             game.game_title
           )}`
         );
         const json = await res.json();
-        game.ageRating = json.age_rating || "Unknown";
+        const first = json.results && json.results[0];
+        if (first && first.esrb_rating && first.esrb_rating.name) {
+          game.ageRating = first.esrb_rating.name;
+        } else {
+          game.ageRating = "Unknown";
+        }
       } catch (err) {
         game.ageRating = "Unknown";
       }
