@@ -6,22 +6,18 @@ const { Pool } = require("pg");
 
 const app = express();
 
-// === CORS setup ===
-// In development you might allow everything; in production lock this down to your frontend URL.
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
-
+// 1) CORS + Private Network support
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: true, // reflect the request origin
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    // let our custom middleware still add the private-network header
-    preflightContinue: false,
+    preflightContinue: false, // let us handle the OPTIONS response
     optionsSuccessStatus: 204,
   })
 );
 
-// Add the Private-Network header for Chrome 130+ preflights
+// Chrome 130+ “private network” preflight header
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
@@ -29,38 +25,37 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// === PostgreSQL setup ===
+// 2) Postgres pool
 const pool = new Pool({
   connectionString: process.env.AZURE_DB_CONN,
   ssl: { rejectUnauthorized: false },
 });
 
-// === Routes ===
-// Health check
+// 3) Health-check
 app.get("/api", (req, res) => {
-  res.send("🎮 Game API is up and running under /api!");
+  res.send("🎮 Game API is up at /api!");
 });
 
-// Fetch classified Steam games, optional ?page & ?perPage
+// 4) Steam games endpoint, with optional pagination
 app.get("/api/classified_steam_games", async (req, res) => {
   const page = parseInt(req.query.page, 10);
   const perPage = parseInt(req.query.perPage, 10);
 
   try {
     if (page > 0 && perPage > 0) {
+      // count
       const countResult = await pool.query(
         "SELECT COUNT(*) AS total FROM classified_steam_games"
       );
       const totalRows = parseInt(countResult.rows[0].total, 10);
 
+      // fetch page
       const offset = (page - 1) * perPage;
       const dataResult = await pool.query(
-        `
-          SELECT *
-            FROM classified_steam_games
-           ORDER BY owners_lower DESC
-           LIMIT $1 OFFSET $2
-        `,
+        `SELECT * 
+           FROM classified_steam_games 
+          ORDER BY owners_lower DESC 
+          LIMIT $1 OFFSET $2`,
         [perPage, offset]
       );
 
@@ -70,22 +65,20 @@ app.get("/api/classified_steam_games", async (req, res) => {
         totalRows,
         data: dataResult.rows,
       });
-    } else {
-      // no pagination
-      const result = await pool.query(
-        "SELECT * FROM classified_steam_games ORDER BY owners_lower DESC"
-      );
-      return res.json(result.rows);
     }
+
+    // no pagination: return all
+    const allResult = await pool.query(
+      "SELECT * FROM classified_steam_games ORDER BY owners_lower DESC"
+    );
+    res.json(allResult.rows);
   } catch (err) {
-    console.error("DB error on classified_steam_games:", err.stack || err);
-    return res
-      .status(500)
-      .json({ error: "DB error on classified_steam_games" });
+    console.error("DB error:", err.stack || err);
+    res.status(500).json({ error: "DB error on classified_steam_games" });
   }
 });
 
-// Violence counts
+// 5) Violence counts
 app.get("/api/violence_counts", async (req, res) => {
   try {
     const { rows } = await pool.query(`
@@ -100,7 +93,7 @@ app.get("/api/violence_counts", async (req, res) => {
   }
 });
 
-// Genre emotion summary
+// 6) Genre emotion summary
 app.get("/api/genre_emotion_summary", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM genre_emotion_summary");
@@ -111,8 +104,8 @@ app.get("/api/genre_emotion_summary", async (req, res) => {
   }
 });
 
-// === Start server ===
+// 7) Start server
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
-  console.log(`API listening on port ${port} (endpoints under /api)`);
+  console.log(`🎮 API listening on port ${port} (endpoints under /api)`);
 });
