@@ -1,23 +1,31 @@
 // vue.config.js
 const { defineConfig } = require("@vue/cli-service");
+const webpack = require("webpack");
 
 module.exports = defineConfig({
   transpileDependencies: true,
 
-  // Proxy /api/* to your backend during development
+  configureWebpack: {
+    plugins: [
+      new webpack.DefinePlugin({
+        // Silences the hydration-mismatch warning and allows proper tree-shaking
+        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(true),
+      }),
+    ],
+  },
+
   devServer: {
     proxy: {
       "/api": {
         target: "http://localhost:3001",
         changeOrigin: true,
         secure: false,
-        // If your API uses a different path, adjust pathRewrite accordingly:
-        // pathRewrite: { "^/api": "" }
+        // if your backend expects no "/api" prefix, uncomment next line:
+        // pathRewrite: { "^/api": "" },
       },
     },
   },
 
-  // When you build for production, Vue will serve from "/" by default.
-  // If you ever need a sub-directory, set publicPath here.
-  // publicPath: process.env.NODE_ENV === "production" ? "/your-subfolder/" : "/",
+  // If you ever deploy under a subfolder, uncomment and adjust publicPath:
+  // publicPath: process.env.NODE_ENV === "production" ? "/subfolder/" : "/",
 });

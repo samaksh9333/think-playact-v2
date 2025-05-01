@@ -107,7 +107,7 @@ export default {
   },
   methods: {
     async fetchGames() {
-      const base = process.env.VUE_APP_API_URL || "";
+      const base = process.env.VUE_APP_API_URL || "http://localhost:3001";
       const url = base
         ? `${base}/api/classified_steam_games`
         : `/api/classified_steam_games`;
