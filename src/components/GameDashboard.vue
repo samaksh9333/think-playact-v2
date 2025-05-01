@@ -1,78 +1,88 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-50 text-gray-800 font-sans">
-    <!-- Navbar -->
-    <nav
-      class="bg-indigo-600 text-white p-4 flex justify-between items-center fixed w-full z-10"
-    >
-      <div class="text-2xl font-bold flex items-center space-x-2">
-        <img src="@/assets/icon.png" alt="ThinkPlayAct Logo" class="w-8 h-8" />
-        <span>ThinkPlay Act</span>
+  <div class="game-dashboard">
+    <header class="navbar">
+      <div class="navbar-container">
+        <div class="logo">
+          <img
+            src="@/assets/icon.png"
+            alt="ThinkPlayAct Logo"
+            class="logo-icon"
+          />
+          <span class="logo-text">Think.Play.Act</span>
+        </div>
+        <nav class="nav-menu">
+          <router-link to="/" class="nav-link">Home</router-link>
+          <router-link to="/mood-observation" class="nav-link"
+            >How They Play</router-link
+          >
+        </nav>
       </div>
-      <router-link to="/" class="hover:underline text-lg">Home</router-link>
-    </nav>
+    </header>
 
-    <!-- Push content below fixed navbar -->
-    <div class="pt-20 flex-1 flex flex-col md:flex-row overflow-hidden">
-      <!-- Sidebar Filters/Search -->
-      <aside
-        class="w-full md:w-64 bg-white p-6 border-b md:border-b-0 md:border-r"
-      >
-        <h2 class="text-indigo-700 text-lg font-semibold mb-4">
-          Filters &amp; Search
-        </h2>
-        <input
-          v-model="searchTerm"
-          type="text"
-          placeholder="Search games…"
-          class="w-full mb-4 p-2 border rounded focus:ring-indigo-400"
-        />
-        <label class="block mb-1 text-sm">Violence Level</label>
-        <select
-          v-model="violenceFilter"
-          class="w-full mb-4 p-2 border rounded focus:ring-indigo-400"
-        >
-          <option value="">All Levels</option>
-          <option value="Non-Violent">Non-Violent</option>
-          <option value="Moderately Violent">Moderately Violent</option>
-          <option value="Highly Violent">Highly Violent</option>
-        </select>
-        <label class="block mb-1 text-sm">Sort By</label>
-        <select
-          v-model="sortKey"
-          class="w-full p-2 border rounded focus:ring-indigo-400"
-        >
+    <main class="dashboard-main">
+      <aside class="sidebar">
+        <h2>Search & Filter</h2>
+        <input v-model="searchTerm" type="text" placeholder="Search games…" />
+
+        <label>Sort By</label>
+        <select v-model="sortKey">
+          <option value="">None</option>
           <option value="owners_lower">Popularity</option>
           <option value="average_playtime">Avg. Playtime</option>
           <option value="avg_emotional_intensity">Emotion Intensity</option>
         </select>
+
+        <label>Filter by Genre</label>
+        <select v-model="genreFilter">
+          <option value="">All Genres</option>
+          <option v-for="g in uniqueGenres" :key="g" :value="g">{{ g }}</option>
+        </select>
+
+        <label>Filter by Age Rating</label>
+        <select v-model="ageRatingFilter">
+          <option value="">All Ratings</option>
+          <option value="Everyone">Everyone</option>
+          <option value="Teen">Teen</option>
+          <option value="Mature">Mature</option>
+          <option value="Adults Only">Adults Only</option>
+          <option value="Not Rated">Not Rated</option>
+          <option value="Unknown">Unknown</option>
+        </select>
       </aside>
 
-      <!-- Games Grid -->
-      <main class="flex-1 p-6 overflow-auto">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">
-          {{ headerText }}
-        </h2>
+      <section class="content">
+        <h2 class="section-title">Top Games</h2>
+        <p class="instructions">
+          Explore a curated list of popular games. Use the filters to search by
+          genre, age rating, or sort by metrics like popularity and average
+          playtime. Click on a card to learn more.
+        </p>
 
-        <div v-if="!filteredGames.length" class="text-center text-gray-500">
-          No games match.
+        <div v-if="!filteredGames.length" class="no-results">
+          No games match your search.
         </div>
 
         <div v-else class="games-grid">
           <div
             v-for="game in filteredGames"
             :key="game.game_title"
-            @click="selectGame(game)"
             class="game-card"
           >
-            <h3 class="font-semibold truncate mb-2">{{ game.game_title }}</h3>
-            <p class="text-sm text-gray-600">
-              {{ new Date(game.release_date).getFullYear() }} &bull;
+            <h3>{{ game.game_title }}</h3>
+            <p>
+              {{ new Date(game.release_date).getFullYear() }} •
               {{ Number(game.owners_lower).toLocaleString() }} owners
+            </p>
+            <p><strong>Playtime:</strong> {{ game.average_playtime }} mins</p>
+            <p><strong>Violence:</strong> {{ game.violence_level }}</p>
+            <p><strong>Genres:</strong> {{ formatGenres(game.genres) }}</p>
+            <p>
+              <strong>Age Rating:</strong> {{ game.ageRating || "Loading..." }}
             </p>
           </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   </div>
 </template>
 
@@ -83,54 +93,78 @@ export default {
     return {
       games: [],
       searchTerm: "",
-      violenceFilter: "",
       sortKey: "owners_lower",
-      PAGE_SIZE: 10,
+      genreFilter: "",
+      ageRatingFilter: "",
     };
   },
   computed: {
-    headerText() {
-      return !this.searchTerm && !this.violenceFilter
-        ? "Top 10 Popular Games"
-        : "Matching Games";
-    },
     filteredGames() {
       const term = this.searchTerm.trim().toLowerCase();
-      let list = this.games
+      return this.games
+        .filter((g) => !term || g.game_title.toLowerCase().includes(term))
         .filter((g) =>
-          term ? g.game_title.toLowerCase().includes(term) : true
+          this.genreFilter
+            ? this.formatGenres(g.genres)
+                .toLowerCase()
+                .includes(this.genreFilter.toLowerCase())
+            : true
         )
         .filter((g) =>
-          this.violenceFilter ? g.violence_level === this.violenceFilter : true
+          this.ageRatingFilter ? g.ageRating === this.ageRatingFilter : true
         )
-        .sort((a, b) => Number(b[this.sortKey]) - Number(a[this.sortKey]));
-
-      return !term && !this.violenceFilter
-        ? list.slice(0, this.PAGE_SIZE)
-        : list;
+        .sort((a, b) =>
+          this.sortKey ? Number(b[this.sortKey]) - Number(a[this.sortKey]) : 0
+        );
+    },
+    uniqueGenres() {
+      const allGenres = this.games.flatMap((g) =>
+        this.formatGenres(g.genres).split(", ")
+      );
+      return [...new Set(allGenres)].filter(Boolean).sort();
     },
   },
   methods: {
     async fetchGames() {
-      // BASE should be "http://localhost:3001" in dev
-      // and "https://your-azure-app.azurewebsites.net" in prod
       const base = process.env.VUE_APP_API_URL || "";
-      // ALWAYS hit /api/classified_steam_games
       const endpoint = base
         ? `${base}/api/classified_steam_games`
         : "/api/classified_steam_games";
 
-      console.log("Fetching games from:", endpoint);
       try {
         const res = await fetch(endpoint);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        this.games = await res.json();
+        const data = await res.json();
+        this.games = data.slice(0, 12);
+        for (const game of this.games) {
+          this.fetchAgeRating(game);
+        }
       } catch (err) {
         console.error("Failed to load games:", err);
       }
     },
-    selectGame(game) {
-      console.log("Selected:", game.game_title);
+    async fetchAgeRating(game) {
+      const base = process.env.VUE_APP_API_URL || "";
+      try {
+        const res = await fetch(
+          `${base}/api/rawg-age-rating?title=${encodeURIComponent(
+            game.game_title
+          )}`
+        );
+        const json = await res.json();
+        game.ageRating = json.age_rating || "Unknown";
+      } catch (err) {
+        game.ageRating = "Unknown";
+      }
+    },
+    formatGenres(genres) {
+      if (!genres) return "N/A";
+      if (typeof genres === "string")
+        return genres
+          .replace(/[{}"]+/g, "")
+          .split(",")
+          .join(", ");
+      return Array.isArray(genres) ? genres.join(", ") : "N/A";
     },
   },
   created() {
@@ -140,31 +174,111 @@ export default {
 </script>
 
 <style scoped>
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+.game-dashboard {
+  font-family: "Roboto", sans-serif;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+.navbar {
+  background-color: #fff;
+  padding: 1.5rem 3rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo {
+  display: flex;
+  align-items: center;
+}
+.logo-icon {
+  width: 70px;
+  margin-right: 1rem;
+}
+.logo-text {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #333;
+}
+.nav-menu {
+  display: flex;
+  gap: 3rem;
+}
+.nav-link {
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+.nav-link:hover {
+  color: #3498db;
+}
+.dashboard-main {
+  display: flex;
+  padding: 2rem;
+}
+.sidebar {
+  width: 280px;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  margin-right: 2rem;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
+.sidebar input,
+.sidebar select {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+.content {
+  flex: 1;
+}
+.section-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+.instructions {
+  color: #555;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
 .game-card {
-  background: white;
-  border-radius: 0.5rem;
+  background: #fff;
+  border-radius: 12px;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid #ddd;
+  transition: box-shadow 0.2s ease;
 }
 .game-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
-/* ensure we push content below fixed navbar */
-.min-h-screen {
-  height: 100vh;
-  padding-top: 4rem;
+.game-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
 }
-@media (max-width: 768px) {
-  .games-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
+.no-results {
+  color: #888;
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 1.1rem;
 }
 </style>
