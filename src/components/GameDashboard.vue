@@ -114,7 +114,7 @@ export default {
   methods: {
     async fetchGames() {
       // front-end will see VUE_APP_API_BASE_URL in production, or use '/api' in dev
-      const base = process.env.VUE_APP_API_BASE_URL || "";
+      const base = process.env.VUE_APP_API_URL || "";
       const endpoint = base
         ? `${base}/api/classified_steam_games`
         : "/api/classified_steam_games";
