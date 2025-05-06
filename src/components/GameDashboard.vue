@@ -124,8 +124,12 @@ export default {
   },
   methods: {
     async fetchGames() {
+      const baseUrl =
+        process.env.NODE_ENV === "production"
+          ? "https://backendtpa-fdhcdfbzh9dbfchz.australiaeast-01.azurewebsites.net"
+          : "";
       try {
-        const res = await fetch("/api/classified_steam_games");
+        const res = await fetch(`${baseUrl}/api/classified_steam_games`);
         const data = await res.json();
         this.games = data.slice(0, 12);
         for (const game of this.games) {
