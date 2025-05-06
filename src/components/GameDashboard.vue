@@ -124,10 +124,7 @@ export default {
   },
   methods: {
     async fetchGames() {
-      const baseUrl =
-        process.env.NODE_ENV === "production"
-          ? "https://backendtpa-fdhcdfbzh9dbfchz.australiaeast-01.azurewebsites.net"
-          : "";
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || "";
       try {
         const res = await fetch(`${baseUrl}/api/classified_steam_games`);
         const data = await res.json();
