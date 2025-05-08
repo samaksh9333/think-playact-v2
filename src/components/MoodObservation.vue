@@ -1,6 +1,5 @@
 <template>
   <div class="mood-page fade-in">
-    <!-- Navbar -->
     <header class="navbar">
       <div class="navbar-container">
         <router-link to="/" class="logo">
@@ -17,7 +16,6 @@
       </div>
     </header>
 
-    <!-- Instructions -->
     <section class="instructions">
       <h1>Post-Gaming Mood Tracker</h1>
       <p>
@@ -28,7 +26,6 @@
       </p>
     </section>
 
-    <!-- GIF Selector -->
     <section class="gif-selector">
       <h2>Select Your Child’s Post-Gaming Mood</h2>
       <div class="gif-grid">
@@ -44,7 +41,6 @@
       </div>
     </section>
 
-    <!-- Info Panel -->
     <transition name="slide-fade">
       <section v-if="selectedMood" class="info-panel">
         <div class="info-header">
@@ -74,26 +70,103 @@
         </div>
       </section>
     </transition>
+
+    <div class="chart-wrapper" v-if="chartData && chartData.length">
+      <div class="chart-inner">
+        <h2>Emotional Intensity by Genre</h2>
+        <div class="chart-container">
+          <Bar :data="moodChart" :options="chartOptions" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { Bar } from "vue-chartjs";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+} from "chart.js";
+
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  ChartDataLabels
+);
+
 export default {
   name: "MoodObservation",
+  components: { Bar },
   data() {
     return {
       selectedMood: null,
+      chartData: [],
+      genreDescriptions: {
+        Action: `⚡ Risk: Higher chances of gamer rage, impulsivity...`,
+        Sports: `⚡ Risk: Competitive frustration or impulsivity...`,
+        "Role-Playing": `⚡ Risk: Emotional vulnerability from deep immersion...`,
+        Strategy: `⚡ Risk: Peer conflict or frustration with team tasks...`,
+        Simulation: `✅ Opportunity: Reflective, calm post-play mood...`,
+      },
+      chartOptions: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 30 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterBody: (ctx) => {
+                const genre = ctx[0].label;
+                return this.genreDescriptions[genre] || "";
+              },
+            },
+          },
+          datalabels: {
+            anchor: "end",
+            align: "end",
+            color: "#000",
+            font: { weight: "bold", size: 12 },
+            formatter: (value, ctx) => {
+              const label = this.chartData[ctx.dataIndex]?.emotion_label || "";
+              return `${label}\n${value.toFixed(1)}`;
+            },
+            clip: false,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: "Average Emotional Intensity" },
+            ticks: { stepSize: 2 },
+          },
+          x: {
+            title: { display: true, text: "Game Genre" },
+          },
+        },
+      },
       moods: [
         {
           name: "Happy",
           file: "happy.gif",
           behaviors: [
-            `Cheerful, shares achievements, often smiling. (<a href="https://www.frontiersin.org/articles/10.3389/fpsyg.2019.01731/full" target="_blank">Frontiers in Psychology</a>)`,
-            `Talks excitedly about the game with family. (<a href="https://link.springer.com/article/10.1007/s10964-017-0646-z" target="_blank">Journal of Youth and Adolescence</a>)`,
-            `Positive carryover into other routines. (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9856521/" target="_blank">PMC</a>)`,
+            `Cheerful, shares achievements, often smiling.`,
+            `Talks excitedly about the game with family.`,
+            `Positive carryover into other routines.`,
           ],
           strategies: [
-            `Acknowledge their wins to boost self-esteem. (<a href="https://www.charliehealth.com/post/video-games-and-mental-health" target="_blank">Charlie Health</a>)`,
+            `Acknowledge their wins to boost self-esteem.`,
             `Create “celebration rituals” after gaming.`,
             `Use their good mood to initiate bonding tasks.`,
           ],
@@ -102,7 +175,7 @@ export default {
           name: "Neutral",
           file: "neutral.gif",
           behaviors: [
-            `Calmly transitions to next task. (<a href="https://www.who.int/europe/news/item/25-09-2024-teens--screens-and-mental-health" target="_blank">WHO</a>)`,
+            `Calmly transitions to next task.`,
             `Tone remains steady and relaxed.`,
             `No obvious emotional shift after gaming.`,
           ],
@@ -116,28 +189,14 @@ export default {
           name: "Irritable",
           file: "angry.gif",
           behaviors: [
-            `Short-tempered when asked to stop gaming. (<a href="https://www.frontiersin.org/articles/10.3389/fpsyg.2019.01731/full" target="_blank">Frontiers in Psychology</a>)`,
+            `Short-tempered when asked to stop gaming.`,
             `Grumbles or resists transition tasks.`,
-            `Elevated stress response post-play. (<a href="https://link.springer.com/article/10.1007/s10964-017-0646-z" target="_blank">Journal of Youth and Adolescence</a>)`,
+            `Elevated stress response post-play.`,
           ],
           strategies: [
             `Use a calm, validating tone.`,
             `Offer cool-down breaks like deep breathing.`,
             `Avoid forcing conversation immediately.`,
-          ],
-        },
-        {
-          name: "Withdrawn",
-          file: "withdrawn.gif",
-          behaviors: [
-            `Avoids interaction, minimal response. (<a href="https://www.frontiersin.org/articles/10.3389/fpsyg.2019.01731/full" target="_blank">Frontiers in Psychology</a>)`,
-            `Retreats to quiet space or room.`,
-            `Appears introspective or emotionally distant.`,
-          ],
-          strategies: [
-            `Give space while remaining gently present.`,
-            `Invite them into low-pressure joint activities.`,
-            `Use open-ended prompts without expectation.`,
           ],
         },
         {
@@ -160,7 +219,7 @@ export default {
           behaviors: [
             `Overtalking or reenacting game scenes.`,
             `Increased motion and verbal excitement.`,
-            `Enthusiastic storytelling about gameplay. (<a href="https://www.charliehealth.com/post/video-games-and-mental-health" target="_blank">Charlie Health</a>)`,
+            `Enthusiastic storytelling about gameplay.`,
           ],
           strategies: [
             `Ask guiding questions to let them share.`,
@@ -171,41 +230,68 @@ export default {
       ],
     };
   },
+  computed: {
+    moodChart() {
+      return {
+        labels: this.chartData.map((d) => d.game_genre),
+        datasets: [
+          {
+            label: "Emotional Impact",
+            backgroundColor: this.chartData.map((d) => {
+              const colors = {
+                Joy: "#FFD700",
+                Excitement: "#800080",
+                Sadness: "#0000FF",
+                Frustration: "#FF0000",
+                Calmness: "#228B22",
+              };
+              return colors[d.emotion_label] || "#3498db";
+            }),
+            data: this.chartData.map((d) => d.avg_intensity),
+          },
+        ],
+      };
+    },
+  },
   methods: {
     selectMood(mood) {
       this.selectedMood = mood;
     },
+    async fetchChartData() {
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || "";
+      try {
+        const res = await fetch(`${baseUrl}/api/genre_emotion_summary`);
+        const data = await res.json();
+        this.chartData = data;
+      } catch (err) {
+        console.error("Failed to load emotion summary:", err);
+      }
+    },
+  },
+  created() {
+    this.fetchChartData();
   },
 };
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
-
-/* Fade-in Animation */
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.fade-in {
-  animation: fadeIn 0.7s ease-in-out;
+.mood-page {
+  font-family: "Roboto", sans-serif;
+  background-color: #f9fafa;
+  padding-top: 6rem;
+  min-height: 100vh;
+  color: #333;
 }
 
-/* Navbar */
 .navbar {
   position: fixed;
   top: 0;
   width: 100%;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 1000;
 }
+
 .navbar-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -214,145 +300,148 @@ export default {
   align-items: center;
   justify-content: space-between;
 }
+
 .logo {
   display: flex;
   align-items: center;
   text-decoration: none;
 }
+
 .logo-icon {
   width: 60px;
   margin-right: 0.75rem;
 }
+
 .logo-text {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #333;
+  color: #2c3e50;
 }
+
 .nav-menu .nav-link {
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: #2c3e50;
   text-decoration: none;
 }
-.nav-menu .nav-link:hover {
-  color: #3498db;
-}
 
-/* Page Spacing */
-.mood-page {
-  font-family: "Roboto", sans-serif;
-  background-color: #f5f5f5;
-  padding-top: 5rem;
-  min-height: 100vh;
-}
-
-/* Instructions */
 .instructions {
   max-width: 800px;
   margin: 2rem auto;
   text-align: center;
 }
+
 .instructions h1 {
-  font-size: 1.75rem;
-}
-.instructions p {
-  color: #555;
-  font-size: 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
 
-/* Mood Grid */
+.instructions p {
+  color: #666;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
 .gif-selector {
   max-width: 1000px;
   margin: 2rem auto;
   text-align: center;
 }
+
 .gif-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
 }
+
 .gif-card {
-  background: #f5f5f5;
+  background: #fff;
   border-radius: 12px;
   padding: 0.5rem;
-  width: 80px;
+  width: 90px;
   cursor: pointer;
   text-align: center;
-  transition: 0.3s;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
+
 .gif-card img {
   width: 100%;
+  border-radius: 6px;
 }
+
 .gif-label {
   font-weight: bold;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
 }
+
 .gif-card.active {
-  box-shadow: 0 0 12px rgba(52, 152, 219, 0.6);
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.5);
   transform: scale(1.05);
 }
 
-/* Info Panel */
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.5s ease;
-}
-.slide-fade-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-.slide-fade-enter-to {
-  opacity: 1;
-  transform: translateY(0);
-}
 .info-panel {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 2rem auto;
-  background: #3498db;
+  background: #4a90e2;
   color: #fff;
   padding: 1.5rem;
   border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
 .info-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: 700;
   margin-bottom: 1rem;
+  text-align: center;
 }
+
 .info-content {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
+  justify-content: space-between;
 }
+
 .info-box {
   background: #fff;
   color: #333;
-  flex: 1 1 300px;
-  padding: 1rem;
+  flex: 1 1 48%;
+  padding: 1rem 1.25rem;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-.info-box h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-}
-.numbered-list {
-  padding-left: 1.2rem;
-}
-.numbered-list li {
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  .gif-card {
-    width: 60px;
-  }
-  .logo-text {
-    font-size: 1.4rem;
-  }
-  .navbar-container {
-    padding: 1rem;
-  }
+.chart-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 2rem auto;
+}
+
+.chart-inner {
+  background: #fff;
+  max-width: 800px;
+  width: 100%;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.chart-inner h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
 }
 </style>
