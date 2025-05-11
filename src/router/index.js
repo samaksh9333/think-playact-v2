@@ -3,21 +3,24 @@ import HomePage from "@/components/Homepage.vue";
 import NoticingShifts from "@/components/NoticingShifts.vue";
 import MoodObservation from "@/components/MoodObservation.vue";
 import GameDashboard from "@/components/GameDashboard.vue";
-// import ParentLogin from "@/components/ParentLogin.vue";
 
 const routes = [
   {
     path: "/",
     component: HomePage,
-    meta: { requiresAuth: true },
   },
   {
     path: "/mood-observation",
     component: MoodObservation,
-    meta: { requiresAuth: true },
   },
-  { path: "/noticing-shifts", component: NoticingShifts },
-  { path: "/game-dash", component: GameDashboard },
+  {
+    path: "/noticing-shifts",
+    component: NoticingShifts,
+  },
+  {
+    path: "/game-dash",
+    component: GameDashboard,
+  },
 ];
 
 const router = createRouter({
@@ -25,14 +28,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-  const isAuthenticated =
-    localStorage.getItem("isParentAuthenticated") === "true";
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/parent-login");
-  } else {
-    next();
-  }
-});
+// ❌ Removed parent login route
+// ❌ Removed route guard
 
 export default router;
