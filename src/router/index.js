@@ -28,7 +28,4 @@ const router = createRouter({
   routes,
 });
 
-// ❌ Removed parent login route
-// ❌ Removed route guard
-
 export default router;
