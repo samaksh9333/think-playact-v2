@@ -3,10 +3,9 @@ import HomePage from "@/components/Homepage.vue";
 import NoticingShifts from "@/components/NoticingShifts.vue";
 import MoodObservation from "@/components/MoodObservation.vue";
 import GameDashboard from "@/components/GameDashboard.vue";
-import ParentLogin from "@/components/ParentLogin.vue";
+// import ParentLogin from "@/components/ParentLogin.vue";
 
 const routes = [
-  { path: "/parent-login", component: ParentLogin },
   {
     path: "/",
     component: HomePage,
