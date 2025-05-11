@@ -1,4 +1,3 @@
-// server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -7,7 +6,6 @@ const { Pool } = require("pg");
 
 const app = express();
 
-// 1) CORS + Private Network support
 app.use(
   cors({
     origin: "https://thinkplayact.netlify.app",
@@ -25,35 +23,31 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// 2) Postgres pool
 const pool = new Pool({
   connectionString: process.env.AZURE_DB_CONN,
   ssl: { rejectUnauthorized: false },
 });
 
-// 3) Health-check
+// Health-check
 app.get("/api", (req, res) => {
   res.send("🎮 Game API is up at /api!");
 });
 
-// 4) Steam games endpoint
-app.get("/api/classified_steam_games", async (req, res) => {
+// GET all steam games
+app.get("/api/steam_games", async (req, res) => {
   const page = parseInt(req.query.page, 10);
   const perPage = parseInt(req.query.perPage, 10);
 
   try {
     if (page > 0 && perPage > 0) {
       const countResult = await pool.query(
-        "SELECT COUNT(*) AS total FROM classified_steam_games"
+        "SELECT COUNT(*) AS total FROM steam_games"
       );
       const totalRows = parseInt(countResult.rows[0].total, 10);
-
       const offset = (page - 1) * perPage;
+
       const dataResult = await pool.query(
-        `SELECT * 
-           FROM classified_steam_games 
-          ORDER BY owners_lower DESC 
-          LIMIT $1 OFFSET $2`,
+        "SELECT * FROM steam_games ORDER BY appid ASC LIMIT $1 OFFSET $2",
         [perPage, offset]
       );
 
@@ -66,21 +60,21 @@ app.get("/api/classified_steam_games", async (req, res) => {
     }
 
     const allResult = await pool.query(
-      "SELECT * FROM classified_steam_games ORDER BY owners_lower DESC"
+      "SELECT * FROM steam_games ORDER BY appid ASC"
     );
     res.json(allResult.rows);
   } catch (err) {
     console.error("DB error:", err.stack || err);
-    res.status(500).json({ error: "DB error on classified_steam_games" });
+    res.status(500).json({ error: "DB error on steam_games" });
   }
 });
 
-// 5) Violence counts
+// Violence counts
 app.get("/api/violence_counts", async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT violence_level, COUNT(*) AS count
-        FROM classified_steam_games
+        FROM steam_games
        GROUP BY violence_level
     `);
     res.json(rows);
@@ -90,7 +84,7 @@ app.get("/api/violence_counts", async (req, res) => {
   }
 });
 
-// 6) Genre emotion summary
+// Genre emotion summary
 app.get("/api/genre_emotion_summary", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM genre_emotion_summary");
@@ -101,7 +95,7 @@ app.get("/api/genre_emotion_summary", async (req, res) => {
   }
 });
 
-// 7) RAWG Proxy endpoint for age rating
+// RAWG Proxy
 app.get("/api/rawg-age-rating", async (req, res) => {
   const title = req.query.title;
   const apiKey = process.env.RAWG_API_KEY;
@@ -116,7 +110,6 @@ app.get("/api/rawg-age-rating", async (req, res) => {
     )}&key=${apiKey}`;
     const response = await fetch(url);
     const data = await response.json();
-
     const rating = data?.results?.[0]?.esrb_rating?.name || "Not Rated";
     return res.json({ age_rating: rating });
   } catch (err) {
@@ -125,7 +118,58 @@ app.get("/api/rawg-age-rating", async (req, res) => {
   }
 });
 
-// 8) Start server
+// Record a mood log
+app.post("/api/mood_logs", async (req, res) => {
+  const { parent_email, mood, game_time_minutes, log_date } = req.body;
+
+  if (!parent_email || !mood || game_time_minutes == null) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const logDate = log_date || new Date().toISOString().split("T")[0];
+
+  try {
+    await pool.query(
+      `INSERT INTO mood_logs (parent_email, mood, game_time_minutes, log_date)
+       VALUES ($1, $2, $3, $4)`,
+      [parent_email, mood, game_time_minutes, logDate]
+    );
+    res.json({ message: "Mood log recorded" });
+  } catch (err) {
+    console.error("DB error on mood_logs insert:", err.stack || err);
+    res.status(500).json({ error: "Failed to insert mood log" });
+  }
+});
+
+// Fetch mood logs (all / by week / by month)
+app.get("/api/mood_logs", async (req, res) => {
+  const { parent_email, period } = req.query;
+
+  if (!parent_email) {
+    return res.status(400).json({ error: "Missing parent_email" });
+  }
+
+  let interval = "";
+  if (period === "week") {
+    interval = "AND log_date >= CURRENT_DATE - INTERVAL '7 days'";
+  } else if (period === "month") {
+    interval = "AND log_date >= CURRENT_DATE - INTERVAL '1 month'";
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM mood_logs
+       WHERE parent_email = $1 ${interval}
+       ORDER BY log_date DESC`,
+      [parent_email]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("DB error on mood_logs fetch:", err.stack || err);
+    res.status(500).json({ error: "Failed to fetch mood logs" });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`🎮 API listening on port ${port} (endpoints under /api)`);

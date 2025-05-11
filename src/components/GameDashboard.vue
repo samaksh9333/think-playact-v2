@@ -24,7 +24,6 @@
         <label>Sort By</label>
         <select v-model="sortKey">
           <option value="">None</option>
-          <option value="owners_lower">Popularity</option>
           <option value="average_playtime">Avg. Playtime</option>
           <option value="avg_emotional_intensity">Emotion Intensity</option>
         </select>
@@ -38,12 +37,12 @@
         <label>Filter by Age Rating</label>
         <select v-model="ageRatingFilter">
           <option value="">All Ratings</option>
-          <option value="Everyone">Everyone</option>
-          <option value="Teen">Teen</option>
-          <option value="Mature">Mature</option>
-          <option value="Adults Only">Adults Only</option>
-          <option value="Not Rated">Not Rated</option>
-          <option value="Unknown">Unknown</option>
+          <option value="G">G</option>
+          <option value="PG">PG</option>
+          <option value="M">M</option>
+          <option value="MA15+">MA15+</option>
+          <option value="R18+">R18+</option>
+          <option value="Unrated">Unrated</option>
         </select>
       </aside>
 
@@ -51,8 +50,8 @@
         <h2 class="section-title">Top Games</h2>
         <p class="instructions">
           Explore a curated list of popular games. Use the filters to search by
-          genre, age rating, or sort by metrics like popularity and average
-          playtime. Click on a card to learn more.
+          title, genre, age rating, or sort by metrics like playtime and
+          intensity.
         </p>
 
         <div v-if="!filteredGames.length" class="no-results">
@@ -62,20 +61,20 @@
         <div v-else class="games-grid">
           <div
             v-for="game in filteredGames"
-            :key="game.game_title"
+            :key="game.appid"
             class="game-card"
           >
             <h3>{{ game.game_title }}</h3>
+            <p>{{ formatYear(game.release_date) }}</p>
             <p>
-              {{ new Date(game.release_date).getFullYear() }} •
-              {{ Number(game.owners_lower).toLocaleString() }} owners
+              <strong>Playtime:</strong> {{ game.average_playtime || 0 }} mins
             </p>
-            <p><strong>Playtime:</strong> {{ game.average_playtime }} mins</p>
-            <p><strong>Violence:</strong> {{ game.violence_level }}</p>
+            <p>
+              <strong>Violence:</strong> {{ game.violence_level_api || "N/A" }}
+            </p>
             <p><strong>Genres:</strong> {{ formatGenres(game.genres) }}</p>
             <p>
-              <strong>Age Rating:</strong>
-              {{ game.ageRating || "Loading..." }}
+              <strong>Age Rating:</strong> {{ game.acb_rating || "Unrated" }}
             </p>
           </div>
         </div>
@@ -89,9 +88,10 @@ export default {
   name: "GameDashboard",
   data() {
     return {
-      games: [],
+      allGames: [],
+      visibleCount: 20,
       searchTerm: "",
-      sortKey: "owners_lower",
+      sortKey: "",
       genreFilter: "",
       ageRatingFilter: "",
     };
@@ -99,8 +99,19 @@ export default {
   computed: {
     filteredGames() {
       const term = this.searchTerm.trim().toLowerCase();
-      return this.games
-        .filter((g) => !term || g.game_title.toLowerCase().includes(term))
+
+      const unique = new Map();
+      this.allGames.forEach((g) => {
+        if (!unique.has(g.appid)) unique.set(g.appid, g);
+      });
+
+      let games = Array.from(unique.values());
+
+      let result = games
+        .filter(
+          (g) =>
+            !term || (g.game_title && g.game_title.toLowerCase().includes(term))
+        )
         .filter((g) =>
           this.genreFilter
             ? this.formatGenres(g.genres)
@@ -109,14 +120,18 @@ export default {
             : true
         )
         .filter((g) =>
-          this.ageRatingFilter ? g.ageRating === this.ageRatingFilter : true
+          this.ageRatingFilter ? g.acb_rating === this.ageRatingFilter : true
         )
         .sort((a, b) =>
-          this.sortKey ? Number(b[this.sortKey]) - Number(a[this.sortKey]) : 0
+          this.sortKey
+            ? Number(b[this.sortKey] || 0) - Number(a[this.sortKey] || 0)
+            : 0
         );
+
+      return term ? result : result.slice(0, this.visibleCount);
     },
     uniqueGenres() {
-      const allGenres = this.games.flatMap((g) =>
+      const allGenres = this.allGames.flatMap((g) =>
         this.formatGenres(g.genres).split(", ")
       );
       return [...new Set(allGenres)].filter(Boolean).sort();
@@ -126,42 +141,27 @@ export default {
     async fetchGames() {
       const baseUrl = process.env.VUE_APP_API_BASE_URL || "";
       try {
-        const res = await fetch(`${baseUrl}/api/classified_steam_games`);
+        const res = await fetch(`${baseUrl}/api/steam_games`);
         const data = await res.json();
-        this.games = data.slice(0, 12);
-        for (const game of this.games) {
-          this.fetchAgeRatingFromRawg(game);
-        }
+        this.allGames = Array.isArray(data) ? data : data.data || [];
       } catch (err) {
         console.error("Failed to load games:", err);
       }
     },
-    async fetchAgeRatingFromRawg(game) {
-      try {
-        const res = await fetch(
-          `https://api.rawg.io/api/games?key=a8bb5f82b68d45adb19a0d48fc80fc92&search=${encodeURIComponent(
-            game.game_title
-          )}`
-        );
-        const json = await res.json();
-        const first = json.results && json.results[0];
-        if (first && first.esrb_rating && first.esrb_rating.name) {
-          game.ageRating = first.esrb_rating.name;
-        } else {
-          game.ageRating = "Unknown";
-        }
-      } catch (err) {
-        game.ageRating = "Unknown";
-      }
-    },
     formatGenres(genres) {
       if (!genres) return "N/A";
-      if (typeof genres === "string")
+      if (typeof genres === "string") {
         return genres
           .replace(/[{}"]+/g, "")
           .split(",")
           .join(", ");
+      }
       return Array.isArray(genres) ? genres.join(", ") : "N/A";
+    },
+    formatYear(date) {
+      if (!date) return "N/A";
+      const d = new Date(date);
+      return isNaN(d.getFullYear()) ? "N/A" : d.getFullYear();
     },
   },
   created() {

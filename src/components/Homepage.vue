@@ -1,97 +1,111 @@
 <template>
   <div class="home-page fade-in">
-    <!-- Navbar -->
-    <header class="navbar">
-      <div class="navbar-container">
-        <div class="logo">
-          <img
-            src="@/assets/icon.png"
-            alt="ThinkPlayAct Logo"
-            class="logo-icon"
-          />
-          <span class="logo-text">Think.Play.Act</span>
-        </div>
-        <nav class="nav-menu">
-          <router-link to="/game-dash" class="nav-link">Game World</router-link>
-          <router-link to="/mood-observation" class="nav-link"
-            >How They Play</router-link
-          >
-        </nav>
-      </div>
-    </header>
+    <div v-if="!unlocked" class="lock-screen">
+      <h1>Welcome to ThinkPlayAct</h1>
+      <input type="password" v-model="password" placeholder="Enter password" />
+      <button @click="checkPassword">Unlock</button>
+      <p v-if="error" class="error-msg">Incorrect password</p>
+    </div>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="hero-background">
-        <div class="hero-content">
-          <h1 class="hero-title">
-            Concerned About Gaming's Impact on Your Child?
-          </h1>
-          <p class="hero-subtitle">
-            Understand new behaviours, find resources for balance, build healthy
-            habits, and support their well-being.
-          </p>
-          <button class="hero-button" @click="$router.push('/noticing-shifts')">
-            Know More
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Mood Tracker Section -->
-    <section class="mood-tracker-section">
-      <div class="tracker-box">
-        <div class="tracker-content">
-          <h2>Track Your Child’s Mood After Gaming</h2>
-          <p>
-            Observe how your child behaves post-gaming. Spot patterns like
-            irritability, withdrawal, or excitement, and get helpful guidance.
-          </p>
-          <button
-            class="mood-button"
-            @click="$router.push('/mood-observation')"
-          >
-            Track Your Child's Mood
-          </button>
-        </div>
-
-        <div class="carousel-wrapper">
-          <div class="carousel-images">
+    <div v-else>
+      <!-- Navbar -->
+      <header class="navbar">
+        <div class="navbar-container">
+          <div class="logo">
             <img
-              v-for="(image, index) in carouselImages"
-              :key="index"
-              :src="image"
-              :class="{ active: index === currentImage }"
-              class="carousel-image"
-              alt="Mood tracker background"
+              src="@/assets/icon.png"
+              alt="ThinkPlayAct Logo"
+              class="logo-icon"
             />
+            <span class="logo-text">Think.Play.Act</span>
+          </div>
+          <nav class="nav-menu">
+            <router-link to="/game-dash" class="nav-link"
+              >Game World</router-link
+            >
+            <router-link to="/mood-observation" class="nav-link"
+              >How They Play</router-link
+            >
+          </nav>
+        </div>
+      </header>
+
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-background">
+          <div class="hero-content">
+            <h1 class="hero-title">
+              Concerned About Gaming's Impact on Your Child?
+            </h1>
+            <p class="hero-subtitle">
+              Understand new behaviours, find resources for balance, build
+              healthy habits, and support their well-being.
+            </p>
+            <button
+              class="hero-button"
+              @click="$router.push('/noticing-shifts')"
+            >
+              Know More
+            </button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Decode Game Age Labels Section -->
-    <section class="age-labels-section">
-      <div class="labels-box">
-        <img
-          src="@/assets/age-guide.jpg"
-          alt="Age Guide"
-          class="labels-image"
-        />
-        <div class="labels-content">
-          <h3>Decode Game Age Labels</h3>
-          <p>
-            Ever wondered what those game ratings like "Mature 17+" or "Everyone
-            10+" really mean? Click below to understand how age labels are
-            assigned, what content they imply, and how to choose games
-            appropriate for your child’s development.
-          </p>
-          <button @click="$router.push('/game-dash')" class="labels-button">
-            View Age Rating Guide
-          </button>
+      <!-- Mood Tracker Section -->
+      <section class="mood-tracker-section">
+        <div class="tracker-box">
+          <div class="tracker-content">
+            <h2>Track Your Child’s Mood After Gaming</h2>
+            <p>
+              Observe how your child behaves post-gaming. Spot patterns like
+              irritability, withdrawal, or excitement, and get helpful guidance.
+            </p>
+            <button
+              class="mood-button"
+              @click="$router.push('/mood-observation')"
+            >
+              Track Your Child's Mood
+            </button>
+          </div>
+
+          <div class="carousel-wrapper">
+            <div class="carousel-images">
+              <img
+                v-for="(image, index) in carouselImages"
+                :key="index"
+                :src="image"
+                :class="{ active: index === currentImage }"
+                class="carousel-image"
+                alt="Mood tracker background"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- Decode Game Age Labels Section -->
+      <section class="age-labels-section">
+        <div class="labels-box">
+          <img
+            src="@/assets/age-guide.jpg"
+            alt="Age Guide"
+            class="labels-image"
+          />
+          <div class="labels-content">
+            <h3>Decode Game Age Labels</h3>
+            <p>
+              Ever wondered what those game ratings like "Mature 17+" or
+              "Everyone 10+" really mean? Click below to understand how age
+              labels are assigned, what content they imply, and how to choose
+              games appropriate for your child’s development.
+            </p>
+            <button @click="$router.push('/game-dash')" class="labels-button">
+              View Age Rating Guide
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -100,6 +114,9 @@ export default {
   name: "HomePage",
   data() {
     return {
+      password: "",
+      unlocked: false,
+      error: false,
       currentImage: 0,
       carouselImages: [
         require("@/assets/image1.png"),
@@ -117,6 +134,16 @@ export default {
   },
   beforeUnmount() {
     clearInterval(this.intervalId);
+  },
+  methods: {
+    checkPassword() {
+      if (this.password === "think2024") {
+        this.unlocked = true;
+        this.error = false;
+      } else {
+        this.error = true;
+      }
+    },
   },
 };
 </script>
@@ -138,6 +165,42 @@ export default {
   to {
     opacity: 1;
   }
+}
+
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 2rem;
+}
+
+.lock-screen input {
+  padding: 0.75rem;
+  font-size: 1rem;
+  width: 250px;
+  margin-top: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.lock-screen button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.5rem;
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.lock-screen .error-msg {
+  color: red;
+  margin-top: 0.5rem;
 }
 
 .navbar {
