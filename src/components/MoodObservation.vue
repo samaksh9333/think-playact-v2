@@ -51,9 +51,9 @@
           </div>
 
           <div class="chart-area">
-            <div class="chart-header">
+            <div class="chart-heading chart-left">
               <h2>How game affect your child’s mood?</h2>
-              <p class="subheading">
+              <p class="chart-subtext">
                 *Emotional Impact:<br />
                 Measure how strongly a game genre tends to affect your child
                 emotionally.<br />
@@ -157,51 +157,55 @@ export default {
           name: "Joy",
           file: "happy.gif",
           behaviors: [
-            "Sports games like FIFA or Rocket League bring joy and excitement.",
-            "They improve reflexes but may cause frustration when losing.",
-          ],
-          strategies: ["1–2 hours is safe — encourage effort, not just wins."],
-        },
-        {
-          name: "Calmness",
-          file: "neutral.gif",
-          behaviors: [
-            "Simulation games like The Sims or Animal Crossing are relaxing.",
-            "They offer creative escape and slow-paced play.",
+            "Sports games like FIFA, NBA 2K, or Rocket League often bring joy and excitement through competition and winning moments.",
+            "They promote fast decision-making and quick reflexes but can also create frustration when losing.",
           ],
           strategies: [
-            "Limit to ~2 hours and encourage physical activity too.",
-          ],
-        },
-        {
-          name: "Frustration",
-          file: "angry.gif",
-          behaviors: [
-            "Strategy games like Age of Empires demand planning.",
-            "Losing progress can lead to frustration or restlessness.",
-          ],
-          strategies: ["Play for 30–60 minutes, encourage breaks and support."],
-        },
-        {
-          name: "Sadness",
-          file: "restless.gif",
-          behaviors: [
-            "RPGs like Final Fantasy or Zelda can be emotionally immersive.",
-            "Failures or sad plots may trigger emotional responses.",
-          ],
-          strategies: [
-            "Talk after gameplay to help kids process story emotions.",
+            "A playtime of 1–2 hours is generally safe — encourage your child to celebrate effort, not just outcomes.",
           ],
         },
         {
           name: "Excitement",
           file: "excited.gif",
           behaviors: [
-            "Action games like Fortnite stimulate adrenaline.",
-            "Fast-paced gameplay excites but may cause hyperactivity.",
+            "Action games such as Call of Duty, Fortnite, or Apex Legends stimulate adrenaline and fast thinking.",
+            "They often cause excitement due to high energy gameplay and quick wins, but overexposure can lead to hyperactivity or short temper.",
           ],
           strategies: [
-            "Limit play to under 90 mins and add calming time after.",
+            "Limit sessions to under 90 minutes at a time, and suggest a calm-down period afterward.",
+          ],
+        },
+        {
+          name: "Sadness",
+          file: "restless.gif",
+          behaviors: [
+            "Role-playing games like The Legend of Zelda, Final Fantasy, or Genshin Impact immerse kids in deep stories and emotional plots.",
+            "While they boost creativity, they can also trigger sadness when characters suffer or fail.",
+          ],
+          strategies: [
+            "Check in after play sessions — discussing in-game stories can help children process these emotions.",
+          ],
+        },
+        {
+          name: "Frustration",
+          file: "angry.gif",
+          behaviors: [
+            "Strategy games such as Clash Royale, Age of Empires, or Civilization require planning and decision-making.",
+            "They challenge the brain, but losing progress or complex tasks can lead to frustration or restlessness.",
+          ],
+          strategies: [
+            "Sessions of 30–60 minutes are recommended, with breaks and positive reinforcement when they struggle.",
+          ],
+        },
+        {
+          name: "Calmness",
+          file: "neutral.gif",
+          behaviors: [
+            "Simulation games like The Sims, Animal Crossing, or Cities: Skylines are typically relaxing and slow-paced.",
+            "They offer a creative escape and a calming effect — ideal for unwinding after school.",
+          ],
+          strategies: [
+            "These games are generally low-risk, but screen time should still be limited to about 2 hours, with occasional physical play for balance.",
           ],
         },
       ],
@@ -291,31 +295,38 @@ html {
   display: flex;
   align-items: center;
 }
+
 .logo-icon {
   width: 70px;
   margin-right: 1rem;
 }
+
 .logo-text {
   font-size: 2.1rem;
   font-weight: 800;
   color: #333;
 }
+
 .nav-menu {
   display: flex;
   gap: 2rem;
 }
+
 .nav-link {
   font-size: 1.1rem;
   font-weight: 600;
   color: #333;
   text-decoration: none;
 }
+
 .nav-link:hover {
   color: #3498db;
 }
+
 .main-layout {
   display: flex;
 }
+
 .sidebar {
   width: 70px;
   background: #f7f7f7;
@@ -324,6 +335,7 @@ html {
   flex-direction: column;
   align-items: center;
 }
+
 .nav-icon {
   width: 40px;
   height: 40px;
@@ -334,40 +346,51 @@ html {
   align-items: center;
   justify-content: center;
 }
+
 .nav-icon img {
   width: 24px;
 }
+
 .content {
   flex: 1;
   padding: 2rem;
 }
+
 .row {
   display: flex;
   gap: 2rem;
   margin-bottom: 2rem;
 }
+
+.same-height {
+  align-items: stretch;
+}
+
 .heading-row {
   align-items: flex-start;
   justify-content: space-between;
 }
+
 .page-title {
   font-size: 1.8rem;
   font-weight: bold;
   color: #222;
 }
-.chart-header {
+
+.chart-heading.chart-left {
   margin-bottom: 1rem;
 }
-.chart-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
+
+.chart-heading h2 {
+  margin-bottom: 0.3rem;
 }
-.subheading {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 0.3rem;
+
+.chart-subtext {
+  font-size: 0.95rem;
+  color: #555;
   line-height: 1.4;
 }
+
 .mood-box {
   background: #fde3cd;
   border-radius: 20px;
@@ -375,45 +398,64 @@ html {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
 }
+
 .instruction {
   font-size: 1.05rem;
   color: #444;
   margin-bottom: 1rem;
 }
+
 .gif-grid {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-grow: 1;
+  align-items: center;
 }
+
 .gif-card {
+  flex: 1 1 120px;
   text-align: center;
   cursor: pointer;
+  max-width: 140px;
 }
+
 .gif-card img {
-  width: 70px;
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
 }
+
 .gif-card.active {
   border: 3px solid #ffcc00;
   box-shadow: 0 0 8px #ffcc00;
+  border-radius: 12px;
 }
+
 .chart-area {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+
 .chart-legend-wrap {
   display: flex;
   height: 100%;
+  min-height: 420px;
   background: #fff;
   padding: 1.5rem;
   border-radius: 20px;
+  align-items: flex-start;
 }
+
 .chart-container {
   flex: 3;
   height: 100%;
 }
+
 .legend-box {
   background: #f5f5f5;
   padding: 1rem;
@@ -423,17 +465,20 @@ html {
   flex: 1;
   margin-left: 1rem;
 }
+
 .column {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
+
 .info-box {
   background: #f7f7f7;
   padding: 1rem;
   border-radius: 14px;
 }
+
 .tracker-box {
   background: #fde3cd;
   padding: 1.5rem;
@@ -443,13 +488,16 @@ html {
   justify-content: space-between;
   gap: 1rem;
 }
+
 .tracker-content {
   max-width: 60%;
 }
+
 .sub {
   color: #c49e74;
   font-size: 1rem;
 }
+
 .start-btn {
   margin-top: 1rem;
   background: #ec8147;
@@ -460,6 +508,7 @@ html {
   border-radius: 20px;
   cursor: pointer;
 }
+
 .light-image {
   max-width: 160px;
   object-fit: contain;
