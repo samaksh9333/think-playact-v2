@@ -236,16 +236,19 @@ export default {
       process.env.VUE_APP_API_BASE_URL ||
       "https://backendtpa-fdhcdfbzh9dbfchz.australiaeast-01.azurewebsites.net";
 
-    if (!baseURL) {
-      console.error("❌ VUE_APP_API_BASE_URL is not defined");
-      return;
-    }
-
     axios
       .get(`${baseURL}/api/genre_emotion_summary`)
       .then((res) => {
-        const labels = res.data.map((entry) => entry.genre);
-        const data = res.data.map((entry) => entry.intensity);
+        if (!Array.isArray(res.data) || res.data.length === 0) {
+          console.warn("⚠️ No data received from API.");
+          return;
+        }
+
+        const labels = res.data.map((entry) => entry.genre || entry.game_genre);
+        const data = res.data.map(
+          (entry) => entry.intensity || entry.avg_intensity
+        );
+
         this.chartData = {
           labels,
           datasets: [

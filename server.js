@@ -6,7 +6,7 @@ const { Pool } = require("pg");
 
 const app = express();
 
-// ✅ Allowed origins for CORS
+// ✅ Define allowed origins
 const allowedOrigins = [
   "http://localhost:8080",
   "http://127.0.0.1:8080",
@@ -15,20 +15,11 @@ const allowedOrigins = [
 const netlifyPreviewRegex =
   /^https:\/\/[a-z0-9-]+--thinkplayact\.netlify\.app$/;
 
-// ✅ Use CORS middleware
+// ✅ CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        netlifyPreviewRegex.test(origin)
-      ) {
-        callback(null, true);
-      } else {
-        console.error(`❌ Blocked by CORS: ${origin}`);
-        callback(new Error("Not allowed by CORS: " + origin));
-      }
+      callback(null, origin || "*"); // dynamically allow any origin
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -37,7 +28,7 @@ app.use(
   })
 );
 
-// Optional: Allow private network access (for edge/local testing)
+// Optional: Allow access to private network
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
@@ -45,7 +36,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// ✅ PostgreSQL Pool
+// ✅ PostgreSQL pool setup
 const pool = new Pool({
   connectionString: process.env.AZURE_DB_CONN,
   ssl: { rejectUnauthorized: false },
@@ -56,7 +47,7 @@ app.get("/api", (req, res) => {
   res.send("🎮 Game API is up at /api!");
 });
 
-// ✅ Steam games (paginated or all)
+// ✅ Get steam games (paginated or all)
 app.get("/api/steam_games", async (req, res) => {
   const page = parseInt(req.query.page, 10);
   const perPage = parseInt(req.query.perPage, 10);
@@ -87,7 +78,7 @@ app.get("/api/steam_games", async (req, res) => {
   }
 });
 
-// ✅ Violence summary
+// ✅ Violence level summary
 app.get("/api/violence_counts", async (req, res) => {
   try {
     const { rows } = await pool.query(`
@@ -102,7 +93,7 @@ app.get("/api/violence_counts", async (req, res) => {
   }
 });
 
-// ✅ Genre-emotion summary
+// ✅ Genre-emotion summary (main Azure chart)
 app.get("/api/genre_emotion_summary", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM genre_emotion_summary");
@@ -113,7 +104,7 @@ app.get("/api/genre_emotion_summary", async (req, res) => {
   }
 });
 
-// ✅ RAWG Proxy
+// ✅ RAWG proxy
 app.get("/api/rawg-age-rating", async (req, res) => {
   const title = req.query.title;
   const apiKey = process.env.RAWG_API_KEY;
@@ -136,7 +127,7 @@ app.get("/api/rawg-age-rating", async (req, res) => {
   }
 });
 
-// ✅ Insert Mood Log
+// ✅ Insert mood log
 app.post("/api/mood_logs", async (req, res) => {
   const { parent_email, mood, game_time_minutes, log_date } = req.body;
 
@@ -159,7 +150,7 @@ app.post("/api/mood_logs", async (req, res) => {
   }
 });
 
-// ✅ Fetch Mood Logs
+// ✅ Fetch mood logs
 app.get("/api/mood_logs", async (req, res) => {
   const { parent_email, period } = req.query;
 
