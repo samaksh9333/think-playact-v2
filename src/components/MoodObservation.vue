@@ -26,14 +26,6 @@
       <div class="content">
         <div class="row heading-row">
           <h2 class="page-title">Navigate Post-game Behaviour</h2>
-          <div class="chart-heading">
-            <h2>How game affect your child’s mood?</h2>
-            <span
-              class="info-icon"
-              title="Observe post-gaming behaviour. Spot patterns and support their well-being."
-              >ℹ️</span
-            >
-          </div>
         </div>
 
         <div class="row same-height">
@@ -59,6 +51,15 @@
           </div>
 
           <div class="chart-area">
+            <div class="chart-header">
+              <h2>How game affect your child’s mood?</h2>
+              <p class="subheading">
+                *Emotional Impact:<br />
+                Measure how strongly a game genre tends to affect your child
+                emotionally.<br />
+                High scores = more intense mood changes.
+              </p>
+            </div>
             <div class="chart-legend-wrap">
               <div class="chart-container">
                 <Bar
@@ -209,14 +210,7 @@ export default {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          datalabels: {
-            anchor: "end",
-            align: "end",
-            color: "#000",
-            font: { weight: "bold", size: 12 },
-            formatter: (value) =>
-              typeof value === "number" ? value.toFixed(1) : "",
-          },
+          datalabels: { display: false },
         },
         scales: {
           y: {
@@ -239,16 +233,10 @@ export default {
     axios
       .get(`${baseURL}/api/genre_emotion_summary`)
       .then((res) => {
-        if (!Array.isArray(res.data) || res.data.length === 0) {
-          console.warn("⚠️ No data received from API.");
-          return;
-        }
-
         const labels = res.data.map((entry) => entry.genre || entry.game_genre);
         const data = res.data.map(
           (entry) => entry.intensity || entry.avg_intensity
         );
-
         this.chartData = {
           labels,
           datasets: [
@@ -279,16 +267,26 @@ export default {
 </script>
 
 <style scoped>
+html {
+  font-size: 17px;
+}
+
+.mood-page {
+  font-family: "Segoe UI", sans-serif;
+}
+
 .navbar {
   background-color: #fff;
   padding: 1.5rem 3rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .logo {
   display: flex;
   align-items: center;
@@ -298,7 +296,7 @@ export default {
   margin-right: 1rem;
 }
 .logo-text {
-  font-size: 2rem;
+  font-size: 2.1rem;
   font-weight: 800;
   color: #333;
 }
@@ -352,16 +350,23 @@ export default {
   align-items: flex-start;
   justify-content: space-between;
 }
-.page-title,
-.section-title {
-  font-size: 1.6rem;
+.page-title {
+  font-size: 1.8rem;
   font-weight: bold;
   color: #222;
 }
-.instruction {
-  font-size: 0.95rem;
-  color: #444;
+.chart-header {
   margin-bottom: 1rem;
+}
+.chart-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.subheading {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.3rem;
+  line-height: 1.4;
 }
 .mood-box {
   background: #fde3cd;
@@ -370,7 +375,11 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+}
+.instruction {
+  font-size: 1.05rem;
+  color: #444;
+  margin-bottom: 1rem;
 }
 .gif-grid {
   display: flex;
@@ -383,7 +392,7 @@ export default {
   cursor: pointer;
 }
 .gif-card img {
-  width: 60px;
+  width: 70px;
 }
 .gif-card.active {
   border: 3px solid #ffcc00;
@@ -394,40 +403,25 @@ export default {
   display: flex;
   flex-direction: column;
 }
-.chart-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-.info-icon {
-  font-size: 1.2rem;
-  color: #888;
-  cursor: pointer;
-}
 .chart-legend-wrap {
   display: flex;
-  gap: 1rem;
   height: 100%;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 20px;
 }
 .chart-container {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1rem;
   flex: 3;
-  height: 300px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  height: 100%;
 }
 .legend-box {
   background: #f5f5f5;
   padding: 1rem;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #555;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  margin-left: 1rem;
 }
 .column {
   flex: 1;
@@ -454,7 +448,7 @@ export default {
 }
 .sub {
   color: #c49e74;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 .start-btn {
   margin-top: 1rem;
