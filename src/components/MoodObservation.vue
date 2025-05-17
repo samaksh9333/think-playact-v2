@@ -272,17 +272,29 @@ export default {
 
 <style scoped>
 html {
-  font-size: 17px;
+  font-size: 16px;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .mood-page {
   font-family: "Segoe UI", sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar {
   background-color: #fff;
-  padding: 1.5rem 3rem;
+  padding: 0.8rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .navbar-container {
@@ -297,69 +309,71 @@ html {
 }
 
 .logo-icon {
-  width: 70px;
-  margin-right: 1rem;
+  width: 50px;
+  margin-right: 0.75rem;
 }
 
 .logo-text {
-  font-size: 2.1rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: #333;
 }
 
 .nav-menu {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .nav-link {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #333;
   text-decoration: none;
 }
-
 .nav-link:hover {
   color: #3498db;
 }
 
 .main-layout {
   display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 70px;
+  width: 60px;
   background: #f7f7f7;
   padding-top: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .nav-icon {
-  width: 40px;
-  height: 40px;
-  margin: 1rem 0;
+  width: 36px;
+  height: 36px;
+  margin: 0.8rem 0;
   background: #fce3cd;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .nav-icon img {
-  width: 24px;
+  width: 20px;
 }
 
 .content {
   flex: 1;
-  padding: 2rem;
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 .row {
   display: flex;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .same-height {
@@ -372,66 +386,66 @@ html {
 }
 
 .page-title {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: #222;
 }
 
 .chart-heading.chart-left {
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .chart-heading h2 {
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
+  font-size: 1.3rem;
 }
 
 .chart-subtext {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #555;
   line-height: 1.4;
 }
 
 .mood-box {
   background: #fde3cd;
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 16px;
+  padding: 1rem;
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
 }
 
 .instruction {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: #444;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .gif-grid {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1rem;
   flex-grow: 1;
   align-items: center;
 }
 
 .gif-card {
-  flex: 1 1 120px;
+  flex: 1 1 90px;
+  max-width: 120px;
   text-align: center;
   cursor: pointer;
-  max-width: 140px;
 }
 
 .gif-card img {
   width: 100%;
-  height: 100px;
+  height: 80px;
   object-fit: contain;
 }
 
 .gif-card.active {
   border: 3px solid #ffcc00;
-  box-shadow: 0 0 8px #ffcc00;
+  box-shadow: 0 0 6px #ffcc00;
   border-radius: 12px;
 }
 
@@ -444,10 +458,10 @@ html {
 .chart-legend-wrap {
   display: flex;
   height: 100%;
-  min-height: 420px;
+  min-height: 360px;
   background: #fff;
-  padding: 1.5rem;
-  border-radius: 20px;
+  padding: 1rem;
+  border-radius: 16px;
   align-items: flex-start;
 }
 
@@ -458,9 +472,9 @@ html {
 
 .legend-box {
   background: #f5f5f5;
-  padding: 1rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
   color: #555;
   flex: 1;
   margin-left: 1rem;
@@ -470,19 +484,19 @@ html {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .info-box {
   background: #f7f7f7;
-  padding: 1rem;
-  border-radius: 14px;
+  padding: 0.8rem;
+  border-radius: 12px;
 }
 
 .tracker-box {
   background: #fde3cd;
-  padding: 1.5rem;
-  border-radius: 24px;
+  padding: 1rem;
+  border-radius: 20px;
   flex: 1;
   display: flex;
   justify-content: space-between;
@@ -495,22 +509,22 @@ html {
 
 .sub {
   color: #c49e74;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .start-btn {
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   background: #ec8147;
   color: white;
-  padding: 0.5rem 1.25rem;
+  padding: 0.5rem 1rem;
   font-weight: bold;
   border: none;
-  border-radius: 20px;
+  border-radius: 18px;
   cursor: pointer;
 }
 
 .light-image {
-  max-width: 160px;
+  max-width: 200px;
   object-fit: contain;
 }
 </style>
