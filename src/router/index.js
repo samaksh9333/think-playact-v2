@@ -21,6 +21,10 @@ const routes = [
     path: "/game-dash",
     component: GameDashboard,
   },
+  {
+    path: "/parent-login",
+    name: "ParentLogin",
+  },
 ];
 
 const router = createRouter({

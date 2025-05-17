@@ -6,16 +6,38 @@ const { Pool } = require("pg");
 
 const app = express();
 
+// ✅ Allowed origins for CORS
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  "https://thinkplayact.netlify.app",
+];
+const netlifyPreviewRegex =
+  /^https:\/\/[a-z0-9-]+--thinkplayact\.netlify\.app$/;
+
+// ✅ Use CORS middleware
 app.use(
   cors({
-    origin: "https://thinkplayact.netlify.app",
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        netlifyPreviewRegex.test(origin)
+      ) {
+        callback(null, true);
+      } else {
+        console.error(`❌ Blocked by CORS: ${origin}`);
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    preflightContinue: false,
     optionsSuccessStatus: 204,
   })
 );
 
+// Optional: Allow private network access (for edge/local testing)
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
@@ -23,17 +45,18 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+// ✅ PostgreSQL Pool
 const pool = new Pool({
   connectionString: process.env.AZURE_DB_CONN,
   ssl: { rejectUnauthorized: false },
 });
 
-// Health-check
+// ✅ Health check
 app.get("/api", (req, res) => {
   res.send("🎮 Game API is up at /api!");
 });
 
-// GET all steam games
+// ✅ Steam games (paginated or all)
 app.get("/api/steam_games", async (req, res) => {
   const page = parseInt(req.query.page, 10);
   const perPage = parseInt(req.query.perPage, 10);
@@ -51,12 +74,7 @@ app.get("/api/steam_games", async (req, res) => {
         [perPage, offset]
       );
 
-      return res.json({
-        page,
-        perPage,
-        totalRows,
-        data: dataResult.rows,
-      });
+      return res.json({ page, perPage, totalRows, data: dataResult.rows });
     }
 
     const allResult = await pool.query(
@@ -64,18 +82,18 @@ app.get("/api/steam_games", async (req, res) => {
     );
     res.json(allResult.rows);
   } catch (err) {
-    console.error("DB error:", err.stack || err);
+    console.error("DB error on steam_games:", err.stack || err);
     res.status(500).json({ error: "DB error on steam_games" });
   }
 });
 
-// Violence counts
+// ✅ Violence summary
 app.get("/api/violence_counts", async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT violence_level, COUNT(*) AS count
-        FROM steam_games
-       GROUP BY violence_level
+      FROM steam_games
+      GROUP BY violence_level
     `);
     res.json(rows);
   } catch (err) {
@@ -84,7 +102,7 @@ app.get("/api/violence_counts", async (req, res) => {
   }
 });
 
-// Genre emotion summary
+// ✅ Genre-emotion summary
 app.get("/api/genre_emotion_summary", async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM genre_emotion_summary");
@@ -95,7 +113,7 @@ app.get("/api/genre_emotion_summary", async (req, res) => {
   }
 });
 
-// RAWG Proxy
+// ✅ RAWG Proxy
 app.get("/api/rawg-age-rating", async (req, res) => {
   const title = req.query.title;
   const apiKey = process.env.RAWG_API_KEY;
@@ -111,14 +129,14 @@ app.get("/api/rawg-age-rating", async (req, res) => {
     const response = await fetch(url);
     const data = await response.json();
     const rating = data?.results?.[0]?.esrb_rating?.name || "Not Rated";
-    return res.json({ age_rating: rating });
+    res.json({ age_rating: rating });
   } catch (err) {
     console.error("RAWG error:", err);
-    return res.status(500).json({ error: "Failed to fetch from RAWG" });
+    res.status(500).json({ error: "Failed to fetch from RAWG" });
   }
 });
 
-// Record a mood log
+// ✅ Insert Mood Log
 app.post("/api/mood_logs", async (req, res) => {
   const { parent_email, mood, game_time_minutes, log_date } = req.body;
 
@@ -141,7 +159,7 @@ app.post("/api/mood_logs", async (req, res) => {
   }
 });
 
-// Fetch mood logs (all / by week / by month)
+// ✅ Fetch Mood Logs
 app.get("/api/mood_logs", async (req, res) => {
   const { parent_email, period } = req.query;
 
@@ -170,6 +188,7 @@ app.get("/api/mood_logs", async (req, res) => {
   }
 });
 
+// ✅ Start server
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`🎮 API listening on port ${port} (endpoints under /api)`);

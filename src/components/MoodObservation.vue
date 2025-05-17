@@ -1,14 +1,9 @@
 <template>
   <div class="mood-page">
-    <!-- Top Navbar -->
     <header class="navbar">
       <div class="navbar-container">
         <div class="logo">
-          <img
-            src="@/assets/icon.png"
-            alt="ThinkPlayAct Logo"
-            class="logo-icon"
-          />
+          <img src="@/assets/icon.png" alt="Logo" class="logo-icon" />
           <span class="logo-text">Think.Play.Act</span>
         </div>
         <nav class="nav-menu">
@@ -20,23 +15,33 @@
       </div>
     </header>
 
-    <!-- Main Body -->
     <div class="main-layout">
-      <!-- Sidebar -->
       <aside class="sidebar">
         <div class="nav-icon">H</div>
-        <div class="nav-icon"><img src="@/assets/nav1.png" alt="nav1" /></div>
-        <div class="nav-icon"><img src="@/assets/nav2.png" alt="nav2" /></div>
-        <div class="nav-icon"><img src="@/assets/nav3.png" alt="nav3" /></div>
+        <div class="nav-icon"><img src="@/assets/nav1.png" /></div>
+        <div class="nav-icon"><img src="@/assets/nav2.png" /></div>
+        <div class="nav-icon"><img src="@/assets/nav3.png" /></div>
       </aside>
 
-      <!-- Content Area -->
       <div class="content">
-        <h1 class="heading">Navigate Post-game Behaviour</h1>
+        <div class="row heading-row">
+          <h2 class="page-title">Navigate Post-game Behaviour</h2>
+          <div class="chart-heading">
+            <h2>How game affect your child’s mood?</h2>
+            <span
+              class="info-icon"
+              title="Observe post-gaming behaviour. Spot patterns and support their well-being."
+              >ℹ️</span
+            >
+          </div>
+        </div>
 
-        <!-- Mood + Chart Row -->
-        <div class="row">
+        <div class="row same-height">
           <div class="mood-box">
+            <p class="instruction">
+              Choose one emotion to understand your child's typical post-play
+              behaviours and how you can support them.
+            </p>
             <div class="gif-grid">
               <div
                 v-for="mood in moods"
@@ -53,12 +58,29 @@
             </div>
           </div>
 
-          <div class="chart-container">
-            <Bar :data="moodChart" :options="chartOptions" />
+          <div class="chart-area">
+            <div class="chart-legend-wrap">
+              <div class="chart-container">
+                <Bar
+                  v-if="chartData"
+                  :data="chartData"
+                  :options="chartOptions"
+                />
+              </div>
+              <div class="legend-box">
+                <h4>Emotional Impact Index:</h4>
+                <ul>
+                  <li><strong>0–2</strong>: Low emotional impact</li>
+                  <li><strong>2–4</strong>: Mild emotional impact</li>
+                  <li><strong>4–8</strong>: Moderate emotional impact</li>
+                  <li><strong>8–12</strong>: Strong emotional impact</li>
+                  <li><strong>12–16</strong>: Intense emotional impact</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Info Boxes + Tracker Row -->
         <div class="row">
           <div class="column">
             <div class="info-box">
@@ -100,6 +122,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import { Bar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -127,63 +150,57 @@ export default {
   data() {
     return {
       selectedMood: null,
+      chartData: null,
       moods: [
         {
-          name: "Happy",
+          name: "Joy",
           file: "happy.gif",
           behaviors: [
-            "Cheerful and cooperative",
-            "Talks about game highlights",
-            "Positive attitude afterwards",
+            "Sports games like FIFA or Rocket League bring joy and excitement.",
+            "They improve reflexes but may cause frustration when losing.",
           ],
-          strategies: [
-            "Celebrate wins together",
-            "Use mood to bond",
-            "Encourage storytelling",
-          ],
+          strategies: ["1–2 hours is safe — encourage effort, not just wins."],
         },
         {
-          name: "Neutral",
+          name: "Calmness",
           file: "neutral.gif",
           behaviors: [
-            "Calm and quiet",
-            "No strong emotional signs",
-            "Transitions smoothly",
+            "Simulation games like The Sims or Animal Crossing are relaxing.",
+            "They offer creative escape and slow-paced play.",
           ],
           strategies: [
-            "Maintain routine",
-            "Relaxing activities",
-            "Light conversation",
+            "Limit to ~2 hours and encourage physical activity too.",
           ],
         },
         {
-          name: "Irritable",
+          name: "Frustration",
           file: "angry.gif",
-          behaviors: ["Snaps back", "Avoids talking", "Frustrated easily"],
-          strategies: ["Allow cool-down", "Use calm tones", "Delay tasks"],
+          behaviors: [
+            "Strategy games like Age of Empires demand planning.",
+            "Losing progress can lead to frustration or restlessness.",
+          ],
+          strategies: ["Play for 30–60 minutes, encourage breaks and support."],
         },
         {
-          name: "Restless",
+          name: "Sadness",
           file: "restless.gif",
           behaviors: [
-            "Pacing or fidgeting",
-            "Can’t settle",
-            "Wants to play more",
+            "RPGs like Final Fantasy or Zelda can be emotionally immersive.",
+            "Failures or sad plots may trigger emotional responses.",
           ],
           strategies: [
-            "Redirect to movement",
-            "Grounding tasks",
-            "Small snack",
+            "Talk after gameplay to help kids process story emotions.",
           ],
         },
         {
-          name: "Excited",
+          name: "Excitement",
           file: "excited.gif",
-          behaviors: ["Hyper talking", "Shares fast", "Animated gestures"],
+          behaviors: [
+            "Action games like Fortnite stimulate adrenaline.",
+            "Fast-paced gameplay excites but may cause hyperactivity.",
+          ],
           strategies: [
-            "Let them express",
-            "Drawing/storytelling",
-            "Calming activity",
+            "Limit play to under 90 mins and add calming time after.",
           ],
         },
       ],
@@ -197,39 +214,58 @@ export default {
             align: "end",
             color: "#000",
             font: { weight: "bold", size: 12 },
-            formatter: (value) => `${value.toFixed(1)}`,
+            formatter: (value) =>
+              typeof value === "number" ? value.toFixed(1) : "",
           },
         },
         scales: {
           y: {
             beginAtZero: true,
-            title: { display: true, text: "Intensity" },
+            title: { display: true, text: "Emotional Impact ☺" },
             ticks: { stepSize: 2 },
           },
-          x: { title: { display: true, text: "Game Genre" } },
+          x: {
+            title: { display: true, text: "Game Genre" },
+          },
         },
       },
     };
   },
-  computed: {
-    moodChart() {
-      return {
-        labels: ["Action", "Sports", "RPG", "Simulation", "Strategy"],
-        datasets: [
-          {
-            label: "Emotional Intensity",
-            backgroundColor: [
-              "#FF6B6B",
-              "#FFD93D",
-              "#6BCB77",
-              "#4D96FF",
-              "#CDB4DB",
-            ],
-            data: [6.8, 5.5, 4.7, 3.2, 6.1],
-          },
-        ],
-      };
-    },
+  mounted() {
+    const baseURL =
+      process.env.VUE_APP_API_BASE_URL ||
+      "https://backendtpa-fdhcdfbzh9dbfchz.australiaeast-01.azurewebsites.net";
+
+    if (!baseURL) {
+      console.error("❌ VUE_APP_API_BASE_URL is not defined");
+      return;
+    }
+
+    axios
+      .get(`${baseURL}/api/genre_emotion_summary`)
+      .then((res) => {
+        const labels = res.data.map((entry) => entry.genre);
+        const data = res.data.map((entry) => entry.intensity);
+        this.chartData = {
+          labels,
+          datasets: [
+            {
+              label: "Emotional Intensity",
+              backgroundColor: [
+                "#FFD93D",
+                "#7F3FBF",
+                "#4285F4",
+                "#EA4335",
+                "#34A853",
+              ],
+              data,
+            },
+          ],
+        };
+      })
+      .catch((err) => {
+        console.error("❌ Failed to fetch chart data:", err);
+      });
   },
   methods: {
     selectMood(mood) {
@@ -240,7 +276,6 @@ export default {
 </script>
 
 <style scoped>
-/* Top navbar */
 .navbar {
   background-color: #fff;
   padding: 1.5rem 3rem;
@@ -269,20 +304,17 @@ export default {
   gap: 2rem;
 }
 .nav-link {
-  text-decoration: none;
   font-size: 1.1rem;
   font-weight: 600;
   color: #333;
+  text-decoration: none;
 }
 .nav-link:hover {
   color: #3498db;
 }
-
 .main-layout {
   display: flex;
 }
-
-/* Sidebar */
 .sidebar {
   width: 70px;
   background: #f7f7f7;
@@ -303,29 +335,39 @@ export default {
 }
 .nav-icon img {
   width: 24px;
-  height: 24px;
 }
-
-/* Content layout */
 .content {
   flex: 1;
   padding: 2rem;
-}
-.heading {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
 }
 .row {
   display: flex;
   gap: 2rem;
   margin-bottom: 2rem;
 }
+.heading-row {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.page-title,
+.section-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #222;
+}
+.instruction {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 1rem;
+}
 .mood-box {
   background: #fde3cd;
   border-radius: 20px;
   padding: 1.5rem;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 .gif-grid {
   display: flex;
@@ -336,9 +378,6 @@ export default {
 .gif-card {
   text-align: center;
   cursor: pointer;
-  border-radius: 12px;
-  padding: 0.25rem;
-  transition: all 0.2s ease;
 }
 .gif-card img {
   width: 60px;
@@ -347,13 +386,45 @@ export default {
   border: 3px solid #ffcc00;
   box-shadow: 0 0 8px #ffcc00;
 }
+.chart-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.chart-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.info-icon {
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+}
+.chart-legend-wrap {
+  display: flex;
+  gap: 1rem;
+  height: 100%;
+}
 .chart-container {
   background: #fff;
   border-radius: 16px;
   padding: 1rem;
-  flex: 1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  flex: 3;
   height: 300px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+.legend-box {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #555;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .column {
   flex: 1;
@@ -366,17 +437,12 @@ export default {
   padding: 1rem;
   border-radius: 14px;
 }
-.info-box h3 {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
 .tracker-box {
   background: #fde3cd;
   padding: 1.5rem;
   border-radius: 24px;
   flex: 1;
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
@@ -386,7 +452,6 @@ export default {
 .sub {
   color: #c49e74;
   font-size: 0.9rem;
-  margin: 0.3rem 0;
 }
 .start-btn {
   margin-top: 1rem;
@@ -400,7 +465,6 @@ export default {
 }
 .light-image {
   max-width: 160px;
-  height: auto;
   object-fit: contain;
 }
 </style>
