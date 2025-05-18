@@ -71,11 +71,11 @@
               <div class="legend-box">
                 <h4>Emotional Impact Index:</h4>
                 <ul>
-                  <li><strong>0–2</strong>: Low emotional impact</li>
-                  <li><strong>2–4</strong>: Mild emotional impact</li>
-                  <li><strong>4–8</strong>: Moderate emotional impact</li>
-                  <li><strong>8–12</strong>: Strong emotional impact</li>
-                  <li><strong>12–16</strong>: Intense emotional impact</li>
+                  <li><strong>0–2</strong>: Low</li>
+                  <li><strong>2–4</strong>: Mild</li>
+                  <li><strong>4–8</strong>: Moderate</li>
+                  <li><strong>8–12</strong>: Strong</li>
+                  <li><strong>12–16</strong>: Intense</li>
                 </ul>
               </div>
             </div>
