@@ -1,13 +1,45 @@
 <template>
-  <div class="h-full flex items-center justify-center text-gray-400">
-    [BarChart]
-  </div>
+  <canvas ref="canvas"></canvas>
 </template>
-<script setup>
-// stub—swap in Chart.js / ECharts later
+
+<script>
+import { Chart, registerables } from "chart.js";
+
+Chart.register(...registerables);
+
+export default {
+  props: {
+    labels: Array,
+    values: Array,
+    title: String,
+  },
+  mounted() {
+    const ctx = this.$refs.canvas.getContext("2d");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: this.labels,
+        datasets: [
+          {
+            label: this.title,
+            data: this.values,
+            backgroundColor: "#125cf2",
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (val) => `${val} hrs`,
+            },
+          },
+        },
+      },
+    });
+  },
+};
 </script>
-<style scoped>
-div {
-  font-size: 0.9rem;
-}
-</style>

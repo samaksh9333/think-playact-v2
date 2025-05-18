@@ -33,7 +33,10 @@
         <input v-model="game_genre" placeholder="Genre of the game" />
         <div class="step-actions">
           <button @click="step--">Previous</button>
-          <button :disabled="!game_name || !game_genre" @click="step++">
+          <button
+            :disabled="!game_name.trim() || !game_genre.trim()"
+            @click="step++"
+          >
             Next
           </button>
         </div>
@@ -43,16 +46,26 @@
       <div v-if="step === 3" class="step-card">
         <h3>When and how long did they play?</h3>
         <input type="date" v-model="play_date" :max="today" />
-        <input
-          type="number"
-          min="1"
-          v-model.number="play_duration_minutes"
-          placeholder="Duration (in minutes)"
-        />
+
+        <div class="time-inputs">
+          <input
+            type="number"
+            min="0"
+            v-model.number="hours"
+            placeholder="Hours"
+          />
+          <input
+            type="number"
+            min="0"
+            v-model.number="minutes"
+            placeholder="Minutes"
+          />
+        </div>
+
         <div class="step-actions">
           <button @click="step--">Previous</button>
           <button
-            :disabled="!play_date || !play_duration_minutes"
+            :disabled="!play_date || (!hours && !minutes)"
             @click="submitEntry"
           >
             Finish
@@ -73,7 +86,8 @@ export default {
       game_name: "",
       game_genre: "",
       play_date: new Date().toISOString().split("T")[0],
-      play_duration_minutes: null,
+      hours: null,
+      minutes: null,
       moods: ["Irritable", "Restless", "Neutral", "Happy", "Excited"],
     };
   },
@@ -84,16 +98,28 @@ export default {
   },
   methods: {
     submitEntry() {
-      const parent_email =
-        localStorage.getItem("parent_email") || "anonymous@demo.com";
+      const totalMinutes =
+        parseInt(this.hours || 0) * 60 + parseInt(this.minutes || 0);
+
+      if (
+        !this.mood ||
+        !this.game_name.trim() ||
+        !this.game_genre.trim() ||
+        !this.play_date ||
+        totalMinutes <= 0
+      ) {
+        alert("❗ Please fill in all fields.");
+        return;
+      }
 
       const entry = {
-        parent_email,
         mood: this.mood,
-        game_name: this.game_name,
-        game_genre: this.game_genre,
+        game_name: this.game_name.trim(),
+        game_genre: this.game_genre.trim(),
         play_date: this.play_date,
-        play_duration_minutes: this.play_duration_minutes,
+        hours: this.hours,
+        minutes: this.minutes,
+        play_duration_minutes: totalMinutes,
       };
 
       this.$emit("submit", entry);
@@ -105,7 +131,8 @@ export default {
       this.game_name = "";
       this.game_genre = "";
       this.play_date = new Date().toISOString().split("T")[0];
-      this.play_duration_minutes = null;
+      this.hours = null;
+      this.minutes = null;
     },
   },
 };
@@ -193,5 +220,12 @@ input {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+}
+.time-inputs {
+  display: flex;
+  gap: 1rem;
+}
+.time-inputs input {
+  flex: 1;
 }
 </style>

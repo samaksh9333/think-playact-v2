@@ -174,6 +174,58 @@ app.get("/api/tracker_logs", async (req, res) => {
   }
 });
 
+app.get("/api/tracker_summary", async (req, res) => {
+  const { parent_email } = req.query;
+
+  if (!parent_email) {
+    return res.status(400).json({ error: "Missing parent_email" });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT game_name, play_date, play_duration_minutes
+       FROM tracker_logs
+       WHERE parent_email = $1`,
+      [parent_email]
+    );
+
+    const today = new Date();
+    const oneWeekAgo = new Date(today);
+    oneWeekAgo.setDate(today.getDate() - 7);
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setDate(today.getDate() - 30);
+
+    const rows = result.rows.map((r) => ({
+      ...r,
+      play_date: new Date(r.play_date),
+    }));
+
+    const weekly = rows.filter((r) => r.play_date >= oneWeekAgo);
+    const monthly = rows.filter((r) => r.play_date >= oneMonthAgo);
+
+    const weeklyGames = [...new Set(weekly.map((r) => r.game_name))].length;
+    const weeklyMinutes = weekly.reduce(
+      (sum, r) => sum + r.play_duration_minutes,
+      0
+    );
+    const monthlyMinutes = monthly.reduce(
+      (sum, r) => sum + r.play_duration_minutes,
+      0
+    );
+
+    return res.json({
+      weeklyGames,
+      weeklyMinutes,
+      weeklyAvg: (weeklyMinutes / 7).toFixed(1),
+      monthlyMinutes,
+      monthlyAvg: (monthlyMinutes / 30).toFixed(1),
+    });
+  } catch (err) {
+    console.error("Summary error:", err);
+    res.status(500).json({ error: "Failed to compute summary" });
+  }
+});
+
 // ✅ Start server
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
