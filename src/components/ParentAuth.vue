@@ -14,7 +14,6 @@
           placeholder="First Name"
           required
           pattern="^[A-Za-z]{2,}$"
-          title="Enter at least 2 alphabetic characters."
         />
         <input
           v-if="isSignup"
@@ -23,7 +22,6 @@
           placeholder="Last Name"
           required
           pattern="^[A-Za-z]{2,}$"
-          title="Enter at least 2 alphabetic characters."
         />
         <input type="email" v-model="email" placeholder="Email" required />
         <input
@@ -47,7 +45,7 @@
             At least one number
           </li>
           <li :class="{ valid: passwordCriteria.symbol }">
-            At least one special character (e.g. @, #, !)
+            At least one special character
           </li>
         </ul>
 
@@ -67,7 +65,7 @@
       <div class="divider">or</div>
 
       <button class="google-btn" @click="signInWithGoogle">
-        <img src="@/assets/google-icon.png" alt="Google" class="google-icon" />
+        <img src="@/assets/google-icon.png" class="google-icon" alt="Google" />
         Continue with Google
       </button>
 
@@ -77,12 +75,12 @@
 </template>
 
 <script>
-import { auth, provider } from "@/firebase/firebase";
 import {
+  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   signInWithPopup,
-  updateProfile,
 } from "firebase/auth";
 
 export default {
@@ -102,8 +100,8 @@ export default {
         length: this.password.length >= 8,
         uppercase: /[A-Z]/.test(this.password),
         lowercase: /[a-z]/.test(this.password),
-        number: /[0-9]/.test(this.password),
-        symbol: /[^A-Za-z0-9]/.test(this.password),
+        number: /\d/.test(this.password),
+        symbol: /[!@#$%^&*(),.?":{}|<>]/.test(this.password),
       };
     },
   },
@@ -113,60 +111,78 @@ export default {
       this.errorMsg = "";
     },
     async handleAuth() {
+      const auth = getAuth();
       this.errorMsg = "";
-      const { length, uppercase, lowercase, number, symbol } =
-        this.passwordCriteria;
 
       try {
+        let userCredential;
+
         if (this.isSignup) {
           if (!this.firstName || !this.lastName) {
-            this.errorMsg = "Please enter your full name.";
-            return;
-          }
-          if (!(length && uppercase && lowercase && number && symbol)) {
-            this.errorMsg =
-              "Password must meet all strength requirements listed.";
+            this.errorMsg = "Please enter your first and last name.";
             return;
           }
 
-          const userCredential = await createUserWithEmailAndPassword(
+          const meetsAll =
+            this.passwordCriteria.length &&
+            this.passwordCriteria.uppercase &&
+            this.passwordCriteria.lowercase &&
+            this.passwordCriteria.number &&
+            this.passwordCriteria.symbol;
+
+          if (!meetsAll) {
+            this.errorMsg = "Password must meet all complexity requirements.";
+            return;
+          }
+
+          userCredential = await createUserWithEmailAndPassword(
             auth,
             this.email,
             this.password
           );
-
-          await updateProfile(userCredential.user, {
-            displayName: `${this.firstName} ${this.lastName}`,
-          });
         } else {
-          await signInWithEmailAndPassword(auth, this.email, this.password);
+          userCredential = await signInWithEmailAndPassword(
+            auth,
+            this.email,
+            this.password
+          );
         }
 
+        // ✅ Save to localStorage
+        localStorage.setItem("parentEmail", userCredential.user.email);
         this.$router.push("/tracker");
       } catch (error) {
-        this.errorMsg = this.formatFirebaseError(error);
+        this.errorMsg = this.formatError(error.code);
       }
     },
+
     async signInWithGoogle() {
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+
       try {
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        localStorage.setItem("parentEmail", result.user.email);
         this.$router.push("/tracker");
       } catch (error) {
-        this.errorMsg = this.formatFirebaseError(error);
+        this.errorMsg = this.formatError(error.code);
       }
     },
-    formatFirebaseError(error) {
-      const map = {
-        "auth/invalid-email": "Invalid email format.",
-        "auth/user-not-found": "User not found.",
-        "auth/wrong-password": "Incorrect password.",
-        "auth/email-already-in-use": "Email is already registered.",
-        "auth/weak-password":
-          "Password is too weak. Follow the strength rules.",
-        "auth/operation-not-allowed": "Email/password sign-in is not enabled.",
-        "auth/invalid-credential": "Invalid credentials. Try again.",
-      };
-      return map[error.code] || "An error occurred. Please try again.";
+
+    formatError(code) {
+      switch (code) {
+        case "auth/invalid-email":
+          return "Invalid email format.";
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+          return "Incorrect email or password.";
+        case "auth/email-already-in-use":
+          return "Email already registered.";
+        case "auth/popup-closed-by-user":
+          return "Google sign-in was closed.";
+        default:
+          return "Authentication failed. Please try again.";
+      }
     },
   },
 };
@@ -187,10 +203,6 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   width: 360px;
   text-align: center;
-}
-.auth-logo {
-  width: 60px;
-  margin-bottom: 1rem;
 }
 form {
   display: flex;
@@ -223,8 +235,8 @@ button {
   padding: 0.6rem;
   border-radius: 6px;
   cursor: pointer;
-  margin: 0 auto; /* ✅ Center the button */
-  width: 85%; /* Optional: keeps layout tidy */
+  margin: 0 auto;
+  width: 85%;
 }
 .google-icon {
   width: 18px;
@@ -261,18 +273,15 @@ button {
   color: green;
   font-weight: 600;
 }
-
 .auth-logo-group {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 1rem;
 }
-
 .auth-logo {
   width: 60px;
 }
-
 .auth-brand {
   font-weight: 700;
   font-size: 1.2rem;

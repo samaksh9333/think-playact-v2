@@ -120,7 +120,7 @@ app.post("/api/tracker_logs", async (req, res) => {
     !game_name ||
     !game_genre ||
     !play_date ||
-    !play_duration_minutes
+    play_duration_minutes == null
   ) {
     return res.status(400).json({ error: "Missing required fields" });
   }
@@ -138,10 +138,10 @@ app.post("/api/tracker_logs", async (req, res) => {
         play_duration_minutes,
       ]
     );
-    res.json({ message: "✅ Tracker log recorded" });
+    res.json({ message: "Tracker log recorded" });
   } catch (err) {
     console.error("DB error on tracker_logs insert:", err.stack || err);
-    res.status(500).json({ error: "❌ Failed to insert tracker log" });
+    res.status(500).json({ error: "Failed to insert tracker log" });
   }
 });
 

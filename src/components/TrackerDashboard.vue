@@ -5,7 +5,6 @@
       Open Tracker
     </button>
 
-    <!-- Tracker Popup -->
     <TrackerModal
       :show="showTracker"
       @submit="handleTrackerSubmit"
@@ -29,29 +28,43 @@ export default {
   },
   methods: {
     async handleTrackerSubmit(entry) {
-      try {
-        // ✅ Map modal field names to DB-compatible format
-        const formattedEntry = {
-          parent_email:
-            localStorage.getItem("parent_email") || "test@parent.com", // Replace with actual login data
-          mood: entry.mood,
-          game_name: entry.gameName,
-          game_genre: entry.genre,
-          play_date: entry.date,
-          play_duration_minutes: parseInt(entry.duration),
-        };
+      const parentEmail = localStorage.getItem("parentEmail");
 
-        // ✅ POST to the correct Azure backend route
-        await axios.post(
+      if (!parentEmail) {
+        alert("❗ Please log in to continue.");
+        return;
+      }
+
+      const payload = {
+        parent_email: parentEmail,
+        mood: entry.mood,
+        game_name: entry.gameName,
+        game_genre: entry.genre,
+        play_date: entry.date,
+        play_duration_minutes: parseInt(entry.duration),
+      };
+
+      try {
+        const response = await axios.post(
           "https://backendtpa-fdhcdfbzh9dbfchz.australiaeast-01.azurewebsites.net/api/tracker_logs",
-          formattedEntry
+          payload
         );
 
-        alert("✅ Entry submitted successfully!");
-        this.showTracker = false;
-      } catch (err) {
-        console.error("❌ Failed to submit tracker entry:", err);
-        alert("❌ Failed to submit entry. Please try again.");
+        if (response.status === 200 || response.status === 201) {
+          alert("✅ Entry submitted successfully!");
+          this.showTracker = false;
+        } else {
+          throw new Error("Unexpected response status: " + response.status);
+        }
+      } catch (error) {
+        console.error(
+          "❌ Failed to submit tracker entry:",
+          error?.response || error
+        );
+        alert(
+          error?.response?.data?.error ||
+            "❌ Submission failed. Please check login and try again."
+        );
       }
     },
   },
@@ -63,6 +76,7 @@ export default {
   padding: 2rem;
   text-align: center;
 }
+
 .open-tracker-btn {
   padding: 0.75rem 1.5rem;
   background: #ec8147;
