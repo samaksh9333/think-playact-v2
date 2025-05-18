@@ -16,21 +16,20 @@
       </div>
     </header>
 
-    <!-- Main Layout -->
     <div class="main-layout">
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="nav-icon initials">{{ userInitial }}</div>
         <div class="nav-icon" @click="showTracker = true">+</div>
-        <router-link to="/game-dash" class="nav-icon"
-          ><img src="@/assets/nav1.png"
-        /></router-link>
-        <router-link to="/tracker-dashboard" class="nav-icon"
-          ><img src="@/assets/nav2.png"
-        /></router-link>
-        <router-link to="/settings" class="nav-icon"
-          ><img src="@/assets/nav3.png"
-        /></router-link>
+        <router-link to="/game-dash" class="nav-icon">
+          <img src="@/assets/nav1.png" />
+        </router-link>
+        <router-link to="/tracker-dashboard" class="nav-icon">
+          <img src="@/assets/nav2.png" />
+        </router-link>
+        <router-link to="/settings" class="nav-icon">
+          <img src="@/assets/nav3.png" />
+        </router-link>
       </aside>
 
       <!-- Dashboard -->
@@ -42,6 +41,7 @@
           </button>
         </div>
 
+        <!-- Stats -->
         <div class="stats-row">
           <div class="stat-card">
             <div class="stat-number">{{ filteredLogs.length }}</div>
@@ -53,8 +53,10 @@
           </div>
         </div>
 
+        <!-- Insights -->
         <h2 class="section-title">Data Insights</h2>
         <div class="insights-grid">
+          <!-- Calendar -->
           <div class="calendar-box">
             <p><strong>Select a date to filter</strong></p>
             <vue-datepicker
@@ -66,6 +68,7 @@
             <p class="calendar-note">🔴 Red = data exists</p>
           </div>
 
+          <!-- Summary + Chart -->
           <div class="summary-card">
             <div class="summary-header">
               <h4>
@@ -100,6 +103,7 @@
           </div>
         </div>
 
+        <!-- Modal -->
         <TrackerModal
           :show="showTracker"
           @submit="handleTrackerSubmit"
@@ -141,8 +145,8 @@ export default {
       if (!selected) return this.currentLogs;
 
       return this.currentLogs.filter((log) => {
+        const date = new Date(log.play_date);
         if (this.filter === "week") {
-          const date = new Date(log.play_date);
           const start = this.getWeekStart(this.selectedDate);
           const end = new Date(start);
           end.setDate(end.getDate() + 6);
@@ -185,14 +189,14 @@ export default {
   methods: {
     setFilter(newFilter) {
       this.filter = newFilter;
-      this.selectedDate = new Date(); // reset to today on filter change
+      this.selectedDate = new Date();
     },
     formatDayLabel(date) {
       return date.toLocaleDateString("en-US", { weekday: "short" });
     },
     getWeekStart(date) {
       const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
       return new Date(date.setDate(diff));
     },
     async fetchLogs() {
