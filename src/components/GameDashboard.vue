@@ -150,14 +150,11 @@ export default {
       showGenreDropdown: false,
       genreIcons: {
         Action: "icon-action.png",
-        Adult: "icon-adult.png",
         Adventure: "icon-adventure.png",
         Casual: "icon-casual.png",
-        Gambling: "icon-gambling.png",
         Simulation: "icon-simulation.png",
         Sports: "icon-sports.png",
         Strategy: "icon-strategy.png",
-        Violence: "icon-vioolence.png",
         Other: "icon-casual.png",
       },
       genreGroups: [
@@ -167,8 +164,6 @@ export default {
         { label: "Strategy", icon: "icon-strategy.png" },
         { label: "Casual", icon: "icon-casual.png" },
         { label: "Adventure", icon: "icon-adventure.png" },
-        { label: "Adult", icon: "icon-adult.png" },
-        { label: "Gambling", icon: "icon-gambling.png" },
       ],
     };
   },
@@ -232,8 +227,6 @@ export default {
         Casual: ["Puzzle", "Platformer", "Casual"],
         Adventure: ["Adventure", "Exploration", "Indie"],
         Sports: ["Sports", "Racing", "Football"],
-        Adult: ["Sexual Content", "Nudity", "NSFW"],
-        Gambling: ["Gambling", "Casino", "Cards"],
       };
 
       for (const [group, keywords] of Object.entries(mapping)) {
@@ -283,6 +276,68 @@ export default {
 </script>
 
 <style scoped>
+/* Margin spacing between Genre and Sort */
+.dropdown-label + .dropdown-label {
+  margin-left: 1.2rem;
+}
+
+/* Consistent dropdown styling for Genre */
+.custom-select.small {
+  width: 100%;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: white;
+  margin-top: 2px;
+  position: relative;
+}
+
+.selected-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.arrow {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-list {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f0f0f0;
+}
+
+.dropdown-icon {
+  width: 20px;
+  height: 20px;
+}
 .dashboard-subtext {
   font-size: 1rem;
   color: #444;
