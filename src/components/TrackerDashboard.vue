@@ -127,7 +127,7 @@ export default {
       showTracker: false,
       filter: "week",
       selectedDate: new Date(),
-      weeklyLogs: [], // Make sure these are always arrays
+      weeklyLogs: [],
       monthlyLogs: [],
     };
   },
@@ -137,18 +137,20 @@ export default {
       return email.charAt(0).toUpperCase();
     },
     currentLogs() {
-      const logs = this.filter === "week" ? this.weeklyLogs : this.monthlyLogs;
-      return Array.isArray(logs) ? logs : [];
+      if (this.filter === "week") {
+        return Array.isArray(this.weeklyLogs) ? this.weeklyLogs : [];
+      } else if (this.filter === "month") {
+        return Array.isArray(this.monthlyLogs) ? this.monthlyLogs : [];
+      }
+      return [];
     },
     filteredLogs() {
       if (!this.selectedDate) return this.currentLogs;
       const selectedDateStr = this.selectedDate.toISOString().split("T")[0];
-
       if (this.filter === "week") {
         const start = this.getWeekStart(this.selectedDate);
         const end = new Date(start);
         end.setDate(end.getDate() + 6);
-
         return this.currentLogs.filter((log) => {
           const date = new Date(log.play_date);
           return date >= start && date <= end;
@@ -192,16 +194,15 @@ export default {
   methods: {
     setFilter(newFilter) {
       this.filter = newFilter;
-      this.selectedDate = new Date(); // Reset date to today
+      this.selectedDate = new Date();
     },
     formatDayLabel(date) {
       return date.toLocaleDateString("en-US", { weekday: "short" });
     },
     getWeekStart(date) {
-      const copied = new Date(date);
-      const day = copied.getDay();
-      const diff = copied.getDate() - day + (day === 0 ? -6 : 1); // Monday as start
-      return new Date(copied.setDate(diff));
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
     },
     async fetchLogs() {
       const email = localStorage.getItem("parentEmail");
@@ -215,15 +216,12 @@ export default {
             params: { parent_email: email, period: "month" },
           }),
         ]);
-
-        // Defensive assignment
         this.weeklyLogs = Array.isArray(week.data) ? week.data : [];
         this.monthlyLogs = Array.isArray(month.data) ? month.data : [];
-
-        console.log("✅ Weekly logs:", this.weeklyLogs);
-        console.log("📆 Monthly logs:", this.monthlyLogs);
       } catch (err) {
-        console.error("❌ Error fetching logs:", err);
+        console.error("❌ Fetch error:", err);
+        this.weeklyLogs = [];
+        this.monthlyLogs = [];
       }
     },
     async handleTrackerSubmit(entry) {
@@ -237,15 +235,14 @@ export default {
         play_duration_minutes:
           parseInt(entry.hours || 0) * 60 + parseInt(entry.minutes || 0),
       };
-
       try {
         await axios.post("/api/tracker_logs", payload);
         alert("✅ Entry added!");
         this.showTracker = false;
-        await this.fetchLogs();
+        this.fetchLogs();
       } catch (err) {
         alert("❌ Submission failed.");
-        console.error("Error:", err);
+        console.error(err);
       }
     },
   },
