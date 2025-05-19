@@ -141,20 +141,21 @@ export default {
       return this.filter === "week" ? this.weeklyLogs : this.monthlyLogs;
     },
     filteredLogs() {
-      const selected = this.selectedDate?.toISOString().split("T")[0];
-      if (!selected) return this.currentLogs;
-
-      return this.currentLogs.filter((log) => {
-        const date = new Date(log.play_date);
-        if (this.filter === "week") {
-          const start = this.getWeekStart(this.selectedDate);
-          const end = new Date(start);
-          end.setDate(end.getDate() + 6);
+      if (!this.selectedDate) return this.currentLogs;
+      const selectedDateStr = this.selectedDate.toISOString().split("T")[0];
+      if (this.filter === "week") {
+        const start = this.getWeekStart(this.selectedDate);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+        return this.currentLogs.filter((log) => {
+          const date = new Date(log.play_date);
           return date >= start && date <= end;
-        } else {
-          return log.play_date === selected;
-        }
-      });
+        });
+      } else {
+        return this.currentLogs.filter(
+          (log) => log.play_date === selectedDateStr
+        );
+      }
     },
     totalMinutes() {
       return this.filteredLogs.reduce(

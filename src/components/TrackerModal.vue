@@ -189,7 +189,6 @@ export default {
   justify-content: center;
   margin-bottom: 1rem;
 }
-
 .step-indicator span {
   width: 12px;
   height: 12px;
@@ -197,7 +196,6 @@ export default {
   background: #ccc;
   margin: 0 5px;
 }
-
 .step-indicator span.active {
   background: #ec8147;
 }
@@ -207,7 +205,6 @@ export default {
   margin-bottom: 1rem;
   color: #333;
 }
-
 input {
   width: 100%;
   padding: 0.6rem;
@@ -216,14 +213,12 @@ input {
   border-radius: 8px;
   font-size: 0.95rem;
 }
-
 .mood-options {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: center;
 }
-
 .mood-options button {
   flex: 1 1 30%;
   padding: 0.6rem;
@@ -234,7 +229,6 @@ input {
   font-weight: 500;
   font-size: 0.9rem;
 }
-
 .mood-options button.selected {
   background: #ec8147;
   color: white;
@@ -246,7 +240,6 @@ input {
   justify-content: space-between;
   margin-top: 1rem;
 }
-
 .next-btn {
   background: #ec8147;
   color: white;
