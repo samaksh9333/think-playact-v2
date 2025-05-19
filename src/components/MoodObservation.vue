@@ -8,9 +8,6 @@
         </div>
         <nav class="nav-menu">
           <router-link to="/game-dash" class="nav-link">Game World</router-link>
-          <router-link to="/mood-observation" class="nav-link"
-            >How They Play</router-link
-          >
         </nav>
       </div>
     </header>

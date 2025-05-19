@@ -20,12 +20,12 @@
             <span class="logo-text">Think.Play.Act</span>
           </div>
           <nav class="nav-menu">
-            <router-link to="/game-dash" class="nav-link"
-              >Game World</router-link
-            >
-            <router-link to="/mood-observation" class="nav-link"
-              >How They Play</router-link
-            >
+            <router-link to="/mood-observation" class="nav-link">
+              Post-game Tracker
+            </router-link>
+            <router-link to="/game-dash" class="nav-link">
+              Game World
+            </router-link>
           </nav>
         </div>
       </header>
@@ -35,10 +35,10 @@
         <div class="hero-background">
           <div class="hero-content">
             <h1 class="hero-title">
-              Concerned About Gaming's Impact on Your Child?
+              12% of adolescents are at risk of problematic gaming (WHO, 2024).
             </h1>
             <p class="hero-subtitle">
-              Understand new behaviours, find resources for balance, build
+              Understand new behaviors, find resources for balance, build
               healthy habits, and support their well-being.
             </p>
             <button
@@ -48,11 +48,14 @@
               Know More
             </button>
           </div>
+          <div class="scroll-button" @click="scrollToTracker">
+            <span>&#x25BC;</span>
+          </div>
         </div>
       </section>
 
       <!-- Mood Tracker Section -->
-      <section class="mood-tracker-section">
+      <section class="mood-tracker-section" ref="trackerSection">
         <div class="tracker-box">
           <div class="tracker-content">
             <h2>Track Your Child’s Mood After Gaming</h2>
@@ -67,7 +70,6 @@
               Track Your Child's Mood
             </button>
           </div>
-
           <div class="carousel-wrapper">
             <div class="carousel-images">
               <img
@@ -131,6 +133,9 @@ export default {
     this.intervalId = setInterval(() => {
       this.currentImage = (this.currentImage + 1) % this.carouselImages.length;
     }, 4000);
+    if (localStorage.getItem("isUnlocked") === "true") {
+      this.unlocked = true;
+    }
   },
   beforeUnmount() {
     clearInterval(this.intervalId);
@@ -140,9 +145,13 @@ export default {
       if (this.password === "think2024") {
         this.unlocked = true;
         this.error = false;
+        localStorage.setItem("isUnlocked", "true");
       } else {
         this.error = true;
       }
+    },
+    scrollToTracker() {
+      this.$refs.trackerSection.scrollIntoView({ behavior: "smooth" });
     },
   },
 };
@@ -156,6 +165,7 @@ export default {
   background-color: #f5f5f5;
   min-height: 100vh;
   animation: fadeIn 1.2s ease-in-out;
+  position: relative;
 }
 
 @keyframes fadeIn {
@@ -178,7 +188,6 @@ export default {
   z-index: 9999;
   padding: 2rem;
 }
-
 .lock-screen input {
   padding: 0.75rem;
   font-size: 1rem;
@@ -187,7 +196,6 @@ export default {
   border: 1px solid #ccc;
   border-radius: 6px;
 }
-
 .lock-screen button {
   margin-top: 1rem;
   padding: 0.6rem 1.5rem;
@@ -197,15 +205,15 @@ export default {
   border-radius: 6px;
   cursor: pointer;
 }
-
 .lock-screen .error-msg {
   color: red;
   margin-top: 0.5rem;
 }
 
+/* Navbar (reduced height) */
 .navbar {
   background-color: #fff;
-  padding: 1.5rem 3rem;
+  padding: 1rem 3rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .navbar-container {
@@ -218,12 +226,11 @@ export default {
   align-items: center;
 }
 .logo-icon {
-  width: 70px;
-  height: auto;
+  width: 60px;
   margin-right: 1rem;
 }
 .logo-text {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: #333;
 }
@@ -232,20 +239,22 @@ export default {
   gap: 3rem;
 }
 .nav-link {
+  font-weight: 600;
   color: #333;
   text-decoration: none;
-  font-weight: 600;
   font-size: 1.2rem;
 }
 .nav-link:hover {
   color: #3498db;
 }
 
+/* Hero Section */
 .hero {
   height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 .hero-background {
   width: 100%;
@@ -254,6 +263,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 .hero-content {
   text-align: center;
@@ -261,28 +271,59 @@ export default {
   background: rgba(0, 0, 0, 0.4);
   padding: 3rem;
   border-radius: 8px;
+  z-index: 2;
 }
 .hero-title {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
+  font-size: 2.6rem;
+  margin-bottom: 1rem;
 }
 .hero-subtitle {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   margin-bottom: 2rem;
 }
 .hero-button {
   background-color: #3498db;
+  color: white;
   border: none;
   padding: 1rem 2rem;
-  border-radius: 50px;
   font-size: 1.1rem;
-  color: #fff;
+  border-radius: 50px;
   cursor: pointer;
 }
 .hero-button:hover {
   background-color: #217dbb;
 }
 
+/* Scroll Button (bottom-right in circle) */
+.scroll-button {
+  position: absolute;
+  bottom: 64px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #3498db;
+  cursor: pointer;
+  z-index: 3;
+  animation: bounce 1.5s infinite;
+}
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+/* Mood Tracker Section */
 .mood-tracker-section {
   background-color: #fff;
   padding: 4rem 2rem 2rem;
@@ -295,17 +336,16 @@ export default {
   border-radius: 16px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   display: flex;
-  align-items: center;
   width: 100%;
   max-width: 1440px;
   gap: 3rem;
+  align-items: center;
 }
 .tracker-content {
   flex: 1;
-  text-align: left;
 }
 .tracker-content h2 {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   margin-bottom: 1rem;
 }
 .tracker-content p {
@@ -315,18 +355,16 @@ export default {
 }
 .mood-button {
   background-color: #3498db;
+  color: white;
   border: none;
   padding: 1rem 2rem;
   font-size: 1.1rem;
-  color: white;
   border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 .mood-button:hover {
   background-color: #217dbb;
 }
-
 .carousel-wrapper {
   flex: 1;
   height: 400px;
@@ -354,6 +392,7 @@ export default {
   opacity: 1;
 }
 
+/* Age Labels Section */
 .age-labels-section {
   padding: 0 2rem 3rem;
   display: flex;
@@ -363,26 +402,21 @@ export default {
   background: #f9f9f9;
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  width: 100%;
   max-width: 1440px;
   gap: 2rem;
-  height: 280px;
 }
 .labels-image {
   height: 100%;
-  width: auto;
+  max-height: 260px;
   border-radius: 16px;
-  object-fit: cover;
 }
 .labels-content {
   flex: 1;
 }
 .labels-content h3 {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.6rem;
   margin-bottom: 0.5rem;
 }
 .labels-content p {
@@ -392,31 +426,26 @@ export default {
 }
 .labels-button {
   background-color: #3498db;
+  color: white;
   border: none;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
-  color: white;
   border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 .labels-button:hover {
   background-color: #217dbb;
 }
 
+/* Responsive Layout */
 @media (max-width: 768px) {
-  .tracker-box {
+  .tracker-box,
+  .labels-box {
     flex-direction: column;
-    padding: 2rem;
     text-align: center;
   }
   .carousel-wrapper {
     height: 250px;
-  }
-  .labels-box {
-    flex-direction: column;
-    height: auto;
-    text-align: center;
   }
 }
 </style>

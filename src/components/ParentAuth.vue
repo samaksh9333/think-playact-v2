@@ -77,6 +77,8 @@
 <script>
 import {
   getAuth,
+  setPersistence,
+  browserSessionPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -110,11 +112,14 @@ export default {
       this.isSignup = !this.isSignup;
       this.errorMsg = "";
     },
+
     async handleAuth() {
       const auth = getAuth();
       this.errorMsg = "";
 
       try {
+        await setPersistence(auth, browserSessionPersistence); // 🔒 Only for session
+
         let userCredential;
 
         if (this.isSignup) {
@@ -148,7 +153,6 @@ export default {
           );
         }
 
-        // ✅ Save to localStorage
         localStorage.setItem("parentEmail", userCredential.user.email);
         this.$router.push("/tracker");
       } catch (error) {
@@ -161,6 +165,8 @@ export default {
       const provider = new GoogleAuthProvider();
 
       try {
+        await setPersistence(auth, browserSessionPersistence); // 🔒 For Google too
+
         const result = await signInWithPopup(auth, provider);
         localStorage.setItem("parentEmail", result.user.email);
         this.$router.push("/tracker");
