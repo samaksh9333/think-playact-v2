@@ -16,20 +16,21 @@
       </div>
     </header>
 
+    <!-- Main Layout -->
     <div class="main-layout">
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="nav-icon initials">{{ userInitial }}</div>
         <div class="nav-icon" @click="showTracker = true">+</div>
-        <router-link to="/game-dash" class="nav-icon">
-          <img src="@/assets/nav1.png" />
-        </router-link>
-        <router-link to="/tracker-dashboard" class="nav-icon">
-          <img src="@/assets/nav2.png" />
-        </router-link>
-        <router-link to="/settings" class="nav-icon">
-          <img src="@/assets/nav3.png" />
-        </router-link>
+        <router-link to="/game-dash" class="nav-icon"
+          ><img src="@/assets/nav1.png"
+        /></router-link>
+        <router-link to="/tracker-dashboard" class="nav-icon"
+          ><img src="@/assets/nav2.png"
+        /></router-link>
+        <router-link to="/settings" class="nav-icon"
+          ><img src="@/assets/nav3.png"
+        /></router-link>
       </aside>
 
       <!-- Dashboard -->
@@ -41,7 +42,6 @@
           </button>
         </div>
 
-        <!-- Stats -->
         <div class="stats-row">
           <div class="stat-card">
             <div class="stat-number">{{ filteredLogs.length }}</div>
@@ -53,7 +53,6 @@
           </div>
         </div>
 
-        <!-- Insights -->
         <h2 class="section-title">Data Insights</h2>
         <div class="insights-grid">
           <!-- Calendar -->
@@ -68,7 +67,7 @@
             <p class="calendar-note">🔴 Red = data exists</p>
           </div>
 
-          <!-- Summary + Chart -->
+          <!-- Chart Summary -->
           <div class="summary-card">
             <div class="summary-header">
               <h4>
@@ -117,9 +116,9 @@
 <script>
 import axios from "axios";
 import BarChart from "./BarChart.vue";
-import TrackerModal from "./TrackerModal.vue";
 import VueDatepicker from "vue-datepicker-next";
 import "vue-datepicker-next/index.css";
+import TrackerModal from "./TrackerModal.vue";
 
 export default {
   components: { BarChart, TrackerModal, VueDatepicker },
@@ -143,6 +142,7 @@ export default {
     filteredLogs() {
       if (!this.selectedDate) return this.currentLogs;
       const selectedDateStr = this.selectedDate.toISOString().split("T")[0];
+
       if (this.filter === "week") {
         const start = this.getWeekStart(this.selectedDate);
         const end = new Date(start);
@@ -188,17 +188,19 @@ export default {
     },
   },
   methods: {
+    formatDayLabel(date) {
+      return date.toLocaleDateString("en-US", { weekday: "short" });
+    },
     setFilter(newFilter) {
       this.filter = newFilter;
       this.selectedDate = new Date();
     },
-    formatDayLabel(date) {
-      return date.toLocaleDateString("en-US", { weekday: "short" });
-    },
     getWeekStart(date) {
       const day = date.getDay();
       const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(date.setDate(diff));
+      const weekStart = new Date(date);
+      weekStart.setDate(diff);
+      return new Date(weekStart.setHours(0, 0, 0, 0));
     },
     async fetchLogs() {
       const email = localStorage.getItem("parentEmail");
@@ -212,8 +214,8 @@ export default {
             params: { parent_email: email, period: "month" },
           }),
         ]);
-        this.weeklyLogs = week.data;
-        this.monthlyLogs = month.data;
+        this.weeklyLogs = Array.isArray(week.data) ? week.data : [];
+        this.monthlyLogs = Array.isArray(month.data) ? month.data : [];
       } catch (err) {
         console.error("❌ Fetch error:", err);
       }
@@ -231,12 +233,10 @@ export default {
       };
       try {
         await axios.post("/api/tracker_logs", payload);
-        alert("✅ Entry added!");
         this.showTracker = false;
-        this.fetchLogs();
+        await this.fetchLogs(); // Refresh after submit
       } catch (err) {
-        alert("❌ Submission failed.");
-        console.error(err);
+        console.error("❌ Submission failed:", err);
       }
     },
   },
