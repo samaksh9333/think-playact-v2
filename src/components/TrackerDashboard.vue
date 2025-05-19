@@ -57,7 +57,6 @@
               :highlighted="highlightedDates"
               :formatter="{ stringify: formatDayLabel }"
             />
-            <p class="calendar-note">🔴 Red = data exists</p>
 
             <!-- 🎮 Hardcoded Top Played Info -->
             <div class="top-played-box">
