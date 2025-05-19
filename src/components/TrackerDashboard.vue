@@ -8,9 +8,7 @@
         </div>
         <nav class="nav-menu">
           <router-link to="/game-dash" class="nav-link">Game World</router-link>
-          <router-link to="/mood-observation" class="nav-link"
-            >How They Play</router-link
-          >
+          <router-link to="/" class="nav-link">Home</router-link>
         </nav>
       </div>
     </header>
@@ -19,12 +17,15 @@
       <aside class="sidebar">
         <div class="nav-icon initials">{{ userInitial }}</div>
         <div class="nav-icon" @click="showTracker = true">+</div>
-        <router-link to="/game-dash" class="nav-icon">
-          <img src="@/assets/nav1.png" />
-        </router-link>
-        <router-link to="/tracker" class="nav-icon">
-          <img src="@/assets/nav2.png" />
-        </router-link>
+        <router-link to="/game-dash" class="nav-icon"
+          ><img src="@/assets/nav1.png"
+        /></router-link>
+        <router-link to="/tracker" class="nav-icon"
+          ><img src="@/assets/nav2.png"
+        /></router-link>
+        <div class="nav-icon" @click="showInsights = true">
+          <img src="@/assets/insight.png" />
+        </div>
       </aside>
 
       <div class="dashboard-main">
@@ -57,6 +58,18 @@
               :formatter="{ stringify: formatDayLabel }"
             />
             <p class="calendar-note">🔴 Red = data exists</p>
+
+            <!-- 🎮 Hardcoded Top Played Info -->
+            <div class="top-played-box">
+              <p>
+                <strong>📅 Top This Week:</strong><br />Genre: Open World<br />Game:
+                GTA 5
+              </p>
+              <p style="margin-top: 1rem">
+                <strong>📅 Top This Month:</strong><br />Genre: Open World<br />Game:
+                GTA 5
+              </p>
+            </div>
           </div>
 
           <div class="summary-card">
@@ -90,6 +103,9 @@
             <p v-else class="calendar-note">
               No data available. Try logging new entries!
             </p>
+            <button class="insights-btn" @click="showInsights = true">
+              🧠 Insights
+            </button>
           </div>
         </div>
 
@@ -98,6 +114,63 @@
           @submit="handleTrackerSubmit"
           @close="showTracker = false"
         />
+
+        <!-- 📘 Insights Modal -->
+        <div
+          v-if="showInsights"
+          class="modal-overlay"
+          @click.self="showInsights = false"
+        >
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>🧠 Research-Based Insights</h2>
+              <button class="close-button" @click="showInsights = false">
+                ×
+              </button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Safe Gaming Limits for Teens:</strong></p>
+              <ul>
+                <li>
+                  <strong>Moderate Gaming (1–3 hrs/day):</strong> Better
+                  psychological adjustment.
+                </li>
+                <li>
+                  <strong>Excessive Gaming (&gt;4 hrs/day):</strong> Linked to
+                  anxiety and poor sleep.
+                </li>
+              </ul>
+              <p><strong>Impact of Game Genre:</strong></p>
+              <ul>
+                <li>
+                  <strong>Violent Games:</strong> May increase aggression.
+                </li>
+                <li>
+                  <strong>Prosocial Games:</strong> Boost empathy and mood.
+                </li>
+              </ul>
+              <p><strong>Time Played:</strong></p>
+              <ul>
+                <li><strong>Short (30–60 min):</strong> Positive.</li>
+                <li><strong>Prolonged (&gt;3 hrs):</strong> Risky.</li>
+              </ul>
+              <p><strong>Parental Tips:</strong></p>
+              <ul>
+                <li>Cap at 2–3 hrs/day with breaks.</li>
+                <li>Mix genres. Watch content.</li>
+                <li>Prioritize sleep and school.</li>
+              </ul>
+              <p>
+                <strong>Conclusion:</strong> Moderate, diverse, social play =
+                good. Excess = risk.
+              </p>
+              <p class="sources">
+                <em>Sources: WHO, APA, Oxford, Granic et al.</em>
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- 🔚 End of Modal -->
       </div>
     </div>
   </div>
@@ -117,6 +190,7 @@ export default {
   data() {
     return {
       showTracker: false,
+      showInsights: false,
       filter: "week",
       selectedDate: new Date(),
       weeklyLogs: [],
@@ -132,7 +206,7 @@ export default {
       return this.filter === "week" ? this.weeklyLogs : this.monthlyLogs;
     },
     filteredLogs() {
-      const selectedMonth = this.selectedDate.toISOString().slice(0, 7); // "YYYY-MM"
+      const selectedMonth = this.selectedDate.toISOString().slice(0, 7);
       return this.currentLogs.filter(
         (log) => log.play_date && log.play_date.startsWith(selectedMonth)
       );
@@ -177,11 +251,7 @@ export default {
     },
     async fetchLogs() {
       const email = localStorage.getItem("parentEmail");
-      if (!email) {
-        console.error("❌ parentEmail not found.");
-        return;
-      }
-
+      if (!email) return;
       try {
         const [week, month] = await Promise.all([
           axios.get(`${BASE_URL}/api/tracker_logs`, {
@@ -193,7 +263,6 @@ export default {
         ]);
         this.weeklyLogs = Array.isArray(week.data) ? week.data : [];
         this.monthlyLogs = Array.isArray(month.data) ? month.data : [];
-        this.$forceUpdate();
       } catch (err) {
         console.error("❌ Error fetching logs:", err);
         this.weeklyLogs = [];
@@ -202,11 +271,7 @@ export default {
     },
     async handleTrackerSubmit(entry) {
       const email = localStorage.getItem("parentEmail");
-      if (!email) {
-        alert("❌ Please log in first.");
-        return;
-      }
-
+      if (!email) return alert("Please log in first.");
       const payload = {
         parent_email: email,
         mood: entry.mood,
@@ -216,13 +281,10 @@ export default {
         play_duration_minutes:
           parseInt(entry.hours || 0) * 60 + parseInt(entry.minutes || 0),
       };
-
       try {
         await axios.post(`${BASE_URL}/api/tracker_logs`, payload);
-        alert("✅ Entry added!");
         this.showTracker = false;
         await this.fetchLogs();
-        this.setFilter(this.filter); // re-trigger reactivity and refresh display
       } catch (err) {
         alert("❌ Submission failed.");
         console.error(err);
@@ -430,5 +492,146 @@ export default {
 .summary-sub {
   font-size: 0.9rem;
   margin-top: 0.6rem;
+}
+
+/* 📘 Insight */
+.insight-card {
+  background: #fff8e1;
+  border-left: 5px solid #ff9800;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+  white-space: pre-line;
+}
+.insight-card h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+}
+.insight-text {
+  line-height: 1.5;
+}
+
+/* 🔍 Insights Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal-content {
+  background: white;
+  max-width: 680px;
+  width: 90%;
+  padding: 2rem;
+  border-radius: 12px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.modal-header h2 {
+  font-size: 1.4rem;
+}
+.close-button {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+}
+.modal-body {
+  font-size: 0.95rem;
+  color: #444;
+}
+.modal-body ul {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.2rem;
+}
+.modal-body ul li {
+  margin-bottom: 0.4rem;
+}
+.sources {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+}
+
+.insights-btn {
+  margin-top: 1rem;
+  background-color: #ec8147;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+/* Insight Modal Styles */
+.insight-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  width: 90%;
+  max-width: 700px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+}
+.insight-body {
+  max-height: 60vh;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.6;
+}
+.close-btn {
+  margin-top: 1rem;
+  background: #3498db;
+  color: white;
+  padding: 0.6rem 1.4rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.top-played-box {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  background: #e7f4ff;
+  padding: 0.8rem;
+  border-radius: 8px;
+  color: #333;
+  text-align: left;
 }
 </style>
