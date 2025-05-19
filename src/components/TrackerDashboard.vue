@@ -129,13 +129,13 @@ export default {
       return email.charAt(0).toUpperCase();
     },
     currentLogs() {
-      if (this.filter === "week") return this.weeklyLogs;
-      if (this.filter === "month") return this.monthlyLogs;
-      return [];
+      return this.filter === "week" ? this.weeklyLogs : this.monthlyLogs;
     },
-    // 👇 Relaxed filter for all logs (removes date restriction)
     filteredLogs() {
-      return this.currentLogs;
+      const selectedMonth = this.selectedDate.toISOString().slice(0, 7); // "YYYY-MM"
+      return this.currentLogs.filter(
+        (log) => log.play_date && log.play_date.startsWith(selectedMonth)
+      );
     },
     totalMinutes() {
       return this.filteredLogs.reduce(
@@ -193,11 +193,7 @@ export default {
         ]);
         this.weeklyLogs = Array.isArray(week.data) ? week.data : [];
         this.monthlyLogs = Array.isArray(month.data) ? month.data : [];
-        console.log(
-          "✅ Logs fetched:",
-          this.weeklyLogs.length,
-          this.monthlyLogs.length
-        );
+        this.$forceUpdate();
       } catch (err) {
         console.error("❌ Error fetching logs:", err);
         this.weeklyLogs = [];
@@ -225,7 +221,8 @@ export default {
         await axios.post(`${BASE_URL}/api/tracker_logs`, payload);
         alert("✅ Entry added!");
         this.showTracker = false;
-        this.fetchLogs();
+        await this.fetchLogs();
+        this.setFilter(this.filter); // re-trigger reactivity and refresh display
       } catch (err) {
         alert("❌ Submission failed.");
         console.error(err);
