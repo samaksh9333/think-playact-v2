@@ -7,6 +7,7 @@
           <span class="logo-text">Think.Play.Act</span>
         </div>
         <nav class="nav-menu">
+          <router-link to="/" class="nav-link">Home</router-link>
           <router-link to="/game-dash" class="nav-link">Game World</router-link>
         </nav>
       </div>
