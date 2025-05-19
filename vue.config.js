@@ -15,11 +15,8 @@ module.exports = defineConfig({
   devServer: {
     proxy: {
       "/api": {
-        target: process.env.VUE_APP_API_URL || "http://localhost:3001",
+        target: "http://localhost:3001", // Azure server in prod, local server in dev
         changeOrigin: true,
-        secure: false,
-        // ✅ No pathRewrite unless needed
-        // pathRewrite: { "^/api": "" }, // Only use if your backend expects routes without /api
       },
     },
   },

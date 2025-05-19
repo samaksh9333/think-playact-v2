@@ -1,6 +1,5 @@
 <template>
   <div class="tracker-dashboard">
-    <!-- Top Navbar -->
     <header class="navbar">
       <div class="navbar-container">
         <div class="logo">
@@ -16,24 +15,18 @@
       </div>
     </header>
 
-    <!-- Main Layout -->
     <div class="main-layout">
-      <!-- Sidebar -->
       <aside class="sidebar">
         <div class="nav-icon initials">{{ userInitial }}</div>
         <div class="nav-icon" @click="showTracker = true">+</div>
-        <router-link to="/game-dash" class="nav-icon"
-          ><img src="@/assets/nav1.png"
-        /></router-link>
-        <router-link to="/tracker-dashboard" class="nav-icon"
-          ><img src="@/assets/nav2.png"
-        /></router-link>
-        <router-link to="/settings" class="nav-icon"
-          ><img src="@/assets/nav3.png"
-        /></router-link>
+        <router-link to="/game-dash" class="nav-icon">
+          <img src="@/assets/nav1.png" />
+        </router-link>
+        <router-link to="/tracker" class="nav-icon">
+          <img src="@/assets/nav2.png" />
+        </router-link>
       </aside>
 
-      <!-- Dashboard -->
       <div class="dashboard-main">
         <div class="header-row">
           <h1>Post-game Tracking</h1>
@@ -55,7 +48,6 @@
 
         <h2 class="section-title">Data Insights</h2>
         <div class="insights-grid">
-          <!-- Calendar -->
           <div class="calendar-box">
             <p><strong>Select a date to filter</strong></p>
             <vue-datepicker
@@ -67,7 +59,6 @@
             <p class="calendar-note">🔴 Red = data exists</p>
           </div>
 
-          <!-- Chart Summary -->
           <div class="summary-card">
             <div class="summary-header">
               <h4>
@@ -97,12 +88,11 @@
               :height="140"
             />
             <p v-else class="calendar-note">
-              No data available for selected filter.
+              No data available. Try logging new entries!
             </p>
           </div>
         </div>
 
-        <!-- Modal -->
         <TrackerModal
           :show="showTracker"
           @submit="handleTrackerSubmit"
@@ -119,6 +109,8 @@ import BarChart from "./BarChart.vue";
 import TrackerModal from "./TrackerModal.vue";
 import VueDatepicker from "vue-datepicker-next";
 import "vue-datepicker-next/index.css";
+
+const BASE_URL = process.env.VUE_APP_API_BASE_URL || "";
 
 export default {
   components: { BarChart, TrackerModal, VueDatepicker },
@@ -137,29 +129,13 @@ export default {
       return email.charAt(0).toUpperCase();
     },
     currentLogs() {
-      if (this.filter === "week") {
-        return Array.isArray(this.weeklyLogs) ? this.weeklyLogs : [];
-      } else if (this.filter === "month") {
-        return Array.isArray(this.monthlyLogs) ? this.monthlyLogs : [];
-      }
+      if (this.filter === "week") return this.weeklyLogs;
+      if (this.filter === "month") return this.monthlyLogs;
       return [];
     },
+    // 👇 Relaxed filter for all logs (removes date restriction)
     filteredLogs() {
-      if (!this.selectedDate) return this.currentLogs;
-      const selectedDateStr = this.selectedDate.toISOString().split("T")[0];
-      if (this.filter === "week") {
-        const start = this.getWeekStart(this.selectedDate);
-        const end = new Date(start);
-        end.setDate(end.getDate() + 6);
-        return this.currentLogs.filter((log) => {
-          const date = new Date(log.play_date);
-          return date >= start && date <= end;
-        });
-      } else {
-        return this.currentLogs.filter(
-          (log) => log.play_date === selectedDateStr
-        );
-      }
+      return this.currentLogs;
     },
     totalMinutes() {
       return this.filteredLogs.reduce(
@@ -199,33 +175,42 @@ export default {
     formatDayLabel(date) {
       return date.toLocaleDateString("en-US", { weekday: "short" });
     },
-    getWeekStart(date) {
-      const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(date.setDate(diff));
-    },
     async fetchLogs() {
       const email = localStorage.getItem("parentEmail");
-      if (!email) return;
+      if (!email) {
+        console.error("❌ parentEmail not found.");
+        return;
+      }
+
       try {
         const [week, month] = await Promise.all([
-          axios.get("/api/tracker_logs", {
+          axios.get(`${BASE_URL}/api/tracker_logs`, {
             params: { parent_email: email, period: "week" },
           }),
-          axios.get("/api/tracker_logs", {
+          axios.get(`${BASE_URL}/api/tracker_logs`, {
             params: { parent_email: email, period: "month" },
           }),
         ]);
         this.weeklyLogs = Array.isArray(week.data) ? week.data : [];
         this.monthlyLogs = Array.isArray(month.data) ? month.data : [];
+        console.log(
+          "✅ Logs fetched:",
+          this.weeklyLogs.length,
+          this.monthlyLogs.length
+        );
       } catch (err) {
-        console.error("❌ Fetch error:", err);
+        console.error("❌ Error fetching logs:", err);
         this.weeklyLogs = [];
         this.monthlyLogs = [];
       }
     },
     async handleTrackerSubmit(entry) {
       const email = localStorage.getItem("parentEmail");
+      if (!email) {
+        alert("❌ Please log in first.");
+        return;
+      }
+
       const payload = {
         parent_email: email,
         mood: entry.mood,
@@ -235,8 +220,9 @@ export default {
         play_duration_minutes:
           parseInt(entry.hours || 0) * 60 + parseInt(entry.minutes || 0),
       };
+
       try {
-        await axios.post("/api/tracker_logs", payload);
+        await axios.post(`${BASE_URL}/api/tracker_logs`, payload);
         alert("✅ Entry added!");
         this.showTracker = false;
         this.fetchLogs();
