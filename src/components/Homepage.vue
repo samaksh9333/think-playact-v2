@@ -35,7 +35,7 @@
         <div class="hero-background">
           <div class="hero-content">
             <h1 class="hero-title">
-              12% of adolescents are at risk of problematic gaming (WHO, 2024).
+              12% of adolescents are at risk of problematic gaming.
             </h1>
             <p class="hero-subtitle">
               Understand new behaviors, find resources for balance, build
